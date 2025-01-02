@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Admin - Manage Users</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+    }
+    .table-container {
+      margin: 50px auto;
+      max-width: 80%;
+    }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: #343a40;
+      color: #fff;
+    }
+    #editModal .modal-header, #createModal .modal-header {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="home.html">MyApp</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarNav" aria-controls="navbarNav"
+              aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Profile</a></li>
+          <li class="nav-item"><a class="nav-link active" href="admin.html">Admin</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" id="logout" href="#">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container table-container">
+    <h1 class="text-center">Manage Users</h1>
+    <button class="btn btn-success mb-3" onclick="openCreateModal()">Create User</button>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        <!-- Dynamic rows will be inserted here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create Modal -->
+  <div class="modal fade" id="createModal" tabindex="-1"
+       aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createModalLabel">Create User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createUserForm">
+            <div class="mb-3">
+              <label for="createUsername" class="form-label">Username</label>
+              <input type="text" class="form-control" id="createUsername" required>
+            </div>
+            <div class="mb-3">
+              <label for="createEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="createEmail" required>
+            </div>
+            <div class="mb-3">
+              <label for="createPassword" class="form-label">Password</label>
+              <input type="password" class="form-control" id="createPassword" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create User</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1"
+       aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <div class="mb-3">
+              <label for="editUsername" class="form-label">Username</label>
+              <input type="text" class="form-control" id="editUsername" required>
+            </div>
+            <div class="mb-3">
+              <label for="editEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="editEmail" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer text-center py-3">
+    <div class="container">
+      <p class="mb-0">MyApp &copy; 2024. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const token = localStorage.getItem('jwt'); // Get JWT token
+    let currentUser = null; // Track the current user being edited
+
+    // Fetch users from the database
+    async function fetchUsers() {
+      try {
+        const response = await fetch('/users', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const users = await response.json();
+          populateTable(users);
+        } else {
+          console.error('Failed to fetch users');
+          alert('Unable to fetch users. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    // Populate the table with users
+    function populateTable(users) {
+      const tableBody = document.getElementById('users-table-body');
+      tableBody.innerHTML = ''; // Clear existing rows
+
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.email}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="openEditModal('${user.username}', '${user.email}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Open the create user modal
+    function openCreateModal() {
+      const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+      createModal.show();
+    }
+
+    // Handle create user form submission
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('createUsername').value;
+      const email = document.getElementById('createEmail').value;
+      const password = document.getElementById('createPassword').value;
+
+      try {
+        const response = await fetch('/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        if (response.ok) {
+          alert('User created successfully');
+          fetchUsers(); // Refresh the user list
+          const createModal = bootstrap.Modal.getInstance(document.getElementById('createModal'));
+          createModal.hide();
+        } else {
+          alert('Failed to create user');
+        }
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('An error occurred while creating the user. Please try again.');
+      }
+    });
+
+    // Open the edit modal
+    function openEditModal(username, email) {
+      currentUser = username;
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editEmail').value = email;
+
+      const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+      editModal.show();
+    }
+
+    // Handle form submission for editing
+    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const newUsername = document.getElementById('editUsername').value;
+      const email = document.getElementById('editEmail').value;
+
+      try {
+        const response = await fetch(`/users/${currentUser}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ newUsername, email })
+        });
+
+        if (response.ok) {
+          alert('User updated successfully');
+          fetchUsers(); // Refresh the user list
+          const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+          editModal.hide();
+        } else {
+          alert('Failed to update user');
+        }
+      } catch (error) {
+        console.error('Error updating user:', error);
+        alert('An error occurred while updating the user. Please try again.');
+      }
+    });
+
+    // Delete a user
+    async function deleteUser(username) {
+  if (!confirm(`Are you sure you want to delete user: ${username}?`)) return;
+
+  try {
+    const response = await fetch(`/users/${username}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.ok) {
+      alert(`User ${username} deleted successfully`);
+      fetchUsers(); // Refresh the user list
+    } else {
+      alert(`Failed to delete user ${username}`);
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    alert('An error occurred while deleting the user. Please try again.');
+  }
+}
+
+
+    // Fetch users on page load
+    window.onload = fetchUsers;
+  </script>
+</body>
+</html>

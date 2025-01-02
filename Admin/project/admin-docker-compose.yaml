@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: admin-mongodb
+    hostname: admin-mongo  # Unique hostname for Admin MongoDB
+    ports:
+      - '27019:27017'  # Exposes MongoDB on port 27019 of the host
+    volumes:
+      - admin_mongo_data:/data/db
+    restart: unless-stopped
+    networks:
+      - admin_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: admin-app
+    hostname: admin-app  # Unique hostname for Admin App
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://admin-mongo:27017/AdminDB  # Use the updated hostname
+      - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
+    volumes:
+      - ./backend:/usr/src/app/backend
+      - ./videos:/usr/src/app/videos
+    restart: unless-stopped
+    networks:
+      - admin_network
+    command: ["node", "backend/app.js"]  # Ensures only the app starts
+
+  nginx:
+    image: nginx:latest
+    container_name: admin-nginx-video-server
+    hostname: admin-nginx  # Unique hostname for Admin Nginx
+    ports:
+      - '8081:80'
+    volumes:
+      - ./videos:/usr/share/nginx/html/videos:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - admin_network
+
+volumes:
+  admin_mongo_data:
+
+networks:
+  admin_network:
+    driver: bridge
