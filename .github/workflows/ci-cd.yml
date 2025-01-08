@@ -67,9 +67,13 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
-      - name: Create Network
+      - name: Remove app-network
         run: |
-          docker network inspect app-network || docker network create app-network
+          docker network rm app-network || true
+
+      - name: Ensure app-network Exists
+        run: |
+          docker network create app-network
 
       - name: Stop Existing Containers
         run: |
@@ -88,8 +92,13 @@ jobs:
           cd User/project
           docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
 
-      - name: Connect Containers to Network
+      - name: Connect Containers to app-network
         run: |
-          docker network inspect app-network || docker network create app-network
           docker network connect app-network admin_admin_1 || true
           docker network connect app-network user_user_1 || true
+          docker network connect app-network admin-mongo || true
+          docker network connect app-network user-mongodb || true
+
+      - name: Verify Network Connectivity
+        run: |
+          docker network inspect app-network
