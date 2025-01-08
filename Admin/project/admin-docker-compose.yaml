@@ -16,7 +16,8 @@ services:
       test: ["CMD", "mongo", "--eval", "db.runCommand('ping')"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5  # Increase retries to ensure MongoDB has enough time to start
+      start_period: 20s  # Allow MongoDB more time to initialize before starting health checks
 
   app:
     build:
@@ -28,7 +29,7 @@ services:
       - '8080:8080'
     depends_on:
       mongo:
-        condition: service_healthy  # Ensure mongo is healthy
+        condition: service_healthy
     environment:
       - MONGO_URI=mongodb://admin-mongo:27017/AdminDB
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
