@@ -14,7 +14,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secure-secret-key';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://user-mongo:27017/UserDB';
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME || "nivenmoviebucket"; // Updated bucket name
 const PORT = process.env.PORT || 8082;
-const ADMIN_MICROSERVICE_URL = process.env.ADMIN_MICROSERVICE_URL || "http://localhost:8080"; // URL for Admin Microservice
 
 const app = express();
 
@@ -97,6 +96,11 @@ app.get("/login.html", (req, res) =>
 app.get("/signup.html", (req, res) =>
   res.sendFile(path.join(__dirname, "../frontend/signup.html"))
 );
+
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 
 // Video upload route
 app.post(

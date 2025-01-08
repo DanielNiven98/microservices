@@ -1,50 +1,38 @@
-version: '3.8'
-
+version: "3.8"
 services:
-  mongo:
-    image: mongo:latest
-    container_name: admin-mongodb
-    hostname: admin-mongo
-    ports:
-      - '27019:27017'
-    volumes:
-      - admin_mongo_data:/data/db
-    restart: always
-    networks:
-      - common_network
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.runCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 10  # Increased retries to 10
-      start_period: 30s  # Allow MongoDB more time to initialize (increased start_period)
-
-  app:
+  admin:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: admin-app
-    hostname: admin-app
     ports:
-      - '8080:8080'
+      - "8080:8080"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/AdminDB
     depends_on:
       mongo:
         condition: service_healthy
-    environment:
-      - MONGO_URI=mongodb://admin-mongo:27017/AdminDB
-      - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
-      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-nivenmoviebucket}
-      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-your-google-cloud-project-id}
-    volumes:
-      - ./backend:/usr/src/app/backend
-    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
-      - common_network
-    command: ["node", "backend/app.js"]
+      - app-network
 
-volumes:
-  admin_mongo_data:
+  mongo:
+    image: mongo:latest
+    container_name: admin-mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand({ ping: 1 })' | mongosh localhost:27017 --quiet"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
-  common_network:
+  app-network:
     driver: bridge

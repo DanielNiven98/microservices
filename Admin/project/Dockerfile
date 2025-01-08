@@ -2,7 +2,9 @@
 FROM node:18-alpine
 
 # Install Nginx
-RUN apk update && apk add --no-cache nginx
+RUN apk update && apk add --no-cache nginx curl
+RUN apk add --no-cache mongodb-tools
+
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app

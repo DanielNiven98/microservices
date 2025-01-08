@@ -1,48 +1,38 @@
-version: '3.8'
-
+version: "3.8"
 services:
-  mongo:
-    image: mongo:latest
-    container_name: user-mongodb
-    hostname: user-mongo
-    ports:
-      - '27017:27017'
-    volumes:
-      - user_mongo_data:/data/db
-    restart: always
-    networks:
-      - common_network
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  app:
+  user:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: user-app
-    hostname: user-app
     ports:
-      - '8082:8082'
-    depends_on:
-      mongo:
-        condition: service_healthy
+      - "8082:8082"
     environment:
-      MONGO_URI: mongodb://user-mongo:27017/UserDB
-      JWT_SECRET: ${JWT_SECRET:-your-very-secure-secret-key}
-    volumes:
-      - ./backend:/usr/src/app/backend
-      - ./videos:/usr/src/app/videos
-    restart: always
+      - MONGO_URL=mongodb://user-mongo:27017/UserDB
+    depends_on:
+      user-mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand({ ping: 1 })' | mongosh localhost:27017"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
-      - common_network
-    command: ["node", "backend/app.js"]
+      - app-network
 
-volumes:
-  user_mongo_data:
+  user-mongo:
+    image: mongo:latest
+    container_name: user-mongodb
+    ports:
+      - "27018:27017"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand({ ping: 1 })' | mongosh localhost:27017"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
-  common_network:
+  app-network:
     driver: bridge

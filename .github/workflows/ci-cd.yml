@@ -9,114 +9,46 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    name: Build and Test Microservices
+  build:
     runs-on: ubuntu-latest
-
-    services:
-      mongo:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-
     steps:
-      # Checkout code from the repository
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      # Debug Admin Service Directory
-      - name: Debug Admin Service Files
-        run: ls -l ./Admin/project
-
-      # Debug User Service Directory
-      - name: Debug User Service Files
-        run: ls -l ./User/project
-
-      # Ensure Dockerfile exists for Admin Service
-      - name: Check Admin Dockerfile
-        run: test -f ./Admin/project/Dockerfile || (echo "Admin Dockerfile not found!" && exit 1)
-
-      # Ensure Dockerfile exists for User Service
-      - name: Check User Dockerfile
-        run: test -f ./User/project/Dockerfile || (echo "User Dockerfile not found!" && exit 1)
-
-      # Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Build Admin Service
-      - name: Build Admin Service Docker Image
-        run: docker build -t microservices-admin -f ./Admin/project/Dockerfile ./Admin/project
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build User Service
-      - name: Build User Service Docker Image
-        run: docker build -t microservices-user -f ./User/project/Dockerfile ./User/project
+      - name: Build and Push Admin Service
+        run: |
+          cd Admin/project
+          docker-compose -f admin-docker-compose.yaml -p admin build
 
-      # Test Admin Service
-      - name: Run Admin Service Tests
-        run: docker run --rm microservices-admin npm test || echo "Admin microservice tests skipped."
-
-      # Test User Service
-      - name: Run User Service Tests
-        run: docker run --rm microservices-user npm test || echo "User microservice tests skipped."
+      - name: Build and Push User Service
+        run: |
+          cd User/project
+          docker-compose -f user-docker-compose.yaml -p user build
 
   deploy:
-    name: Deploy Microservices
-    needs: build-and-test
+    needs: build
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout code from the repository
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      # Install Docker Compose (manual installation method)
-      - name: Install Docker Compose
+      - name: Deploy Admin Service
         run: |
-          sudo apt-get update
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
+          cd Admin/project
+          docker-compose -f admin-docker-compose.yaml -p admin down
+          docker-compose -f admin-docker-compose.yaml -p admin up --build -d
 
-      # Deploy Admin Microservice
-      - name: Deploy Admin Microservice
-        run: docker-compose -f ./Admin/project/admin-docker-compose.yaml -p admin up --build -d
-
-      # Deploy User Microservice
-      - name: Deploy User Microservice
-        run: docker-compose -f ./User/project/user-docker-compose.yaml -p user up --build -d
-
-      # Health check for Admin service
-      - name: Wait for Admin Microservice to be Healthy
+      - name: Deploy User Service
         run: |
-          echo "Waiting for Admin service health check to pass..."
-          for i in {1..60}; do  # Increased number of attempts
-            health_status=$(docker inspect --format '{{json .State.Health.Status}}' admin-mongodb)
-            if [ "$health_status" == '"healthy"' ]; then
-              echo "Admin microservice is healthy."
-              break
-            fi
-            echo "Waiting for admin-mongodb to be healthy... (Attempt $i)"
-            sleep 10
-          done
-          if [ "$health_status" != '"healthy"' ]; then
-            echo "Admin microservice failed to become healthy."
-            exit 1
-          fi
-
-      # Health check for User service
-      - name: Wait for User Microservice to be Healthy
-        run: |
-          echo "Waiting for User service health check to pass..."
-          for i in {1..60}; do  # Increased number of attempts
-            health_status=$(docker inspect --format '{{json .State.Health.Status}}' user-mongodb)
-            if [ "$health_status" == '"healthy"' ]; then
-              echo "User microservice is healthy."
-              break
-            fi
-            echo "Waiting for user-mongodb to be healthy... (Attempt $i)"
-            sleep 10
-          done
-          if [ "$health_status" != '"healthy"' ]; then
-            echo "User microservice failed to become healthy."
-            exit 1
-          fi
+          cd User/project
+          docker-compose -f user-docker-compose.yaml -p user down
+          docker-compose -f user-docker-compose.yaml -p user up --build -d

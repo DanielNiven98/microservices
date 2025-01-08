@@ -14,7 +14,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-very-secure-secret-key";
 const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017/AdminDB"; // AdminDB connection
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME || "nivenmoviebucket"; // Updated bucket name
 const PORT = process.env.PORT || 8080; // Admin side port
-const USER_MICROSERVICE_URL = process.env.USER_MICROSERVICE_URL || "http://user-app:8082"; // User microservice URL
 
 const app = express();
 
@@ -23,13 +22,8 @@ const storage = new Storage({ projectId: process.env.GCP_PROJECT_ID });
 const bucket = storage.bucket(GCS_BUCKET_NAME);
 
 // ---------------- MongoDB Connection ---------------- //
-mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-    process.exit(1);
-  });
+mongoose.connect("mongodb://mongo:27017/AdminDB");
+
 
 // ---------------- Mongoose Schema & Model ---------------- //
 const userSchema = new mongoose.Schema({
@@ -320,6 +314,11 @@ app.put("/user/update", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "An error occurred while updating your profile." });
   }
 });
+
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 
 // ---------------- Start Server ---------------- //
 app.listen(PORT, "0.0.0.0", () => {
