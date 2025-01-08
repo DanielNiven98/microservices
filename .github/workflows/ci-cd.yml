@@ -36,11 +36,11 @@ jobs:
 
       # Build Admin Service
       - name: Build Admin Service Docker Image
-        run: docker build -t microservices-admin ./Admin/project
+        run: docker build -t microservices-admin -f ./Admin/project/Dockerfile ./Admin/project
 
       # Build User Service
       - name: Build User Service Docker Image
-        run: docker build -t microservices-user ./User/project
+        run: docker build -t microservices-user -f ./User/project/Dockerfile ./User/project
 
       # Test Admin Service
       - name: Run Admin Service Tests
