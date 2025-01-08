@@ -67,6 +67,10 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: Create Network
+        run: |
+          docker network inspect app-network || docker network create app-network
+
       - name: Stop Existing Containers
         run: |
           cd Admin/project
@@ -83,3 +87,9 @@ jobs:
         run: |
           cd User/project
           docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
+
+      - name: Connect Containers to Network
+        run: |
+          docker network inspect app-network || docker network create app-network
+          docker network connect app-network admin_admin_1 || true
+          docker network connect app-network user_user_1 || true
