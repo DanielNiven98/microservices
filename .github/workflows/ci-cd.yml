@@ -46,11 +46,11 @@ jobs:
 
       # Build Admin Service
       - name: Build Admin Service Docker Image
-        run: docker build -t microservices-admin -f $GITHUB_WORKSPACE/Admin/project/Dockerfile $GITHUB_WORKSPACE/Admin/project
+        run: docker build -t microservices-admin -f ./Admin/project/Dockerfile ./Admin/project
 
       # Build User Service
       - name: Build User Service Docker Image
-        run: docker build -t microservices-user -f $GITHUB_WORKSPACE/User/project/Dockerfile $GITHUB_WORKSPACE/User/project
+        run: docker build -t microservices-user -f ./User/project/Dockerfile ./User/project
 
       # Test Admin Service
       - name: Run Admin Service Tests
@@ -69,6 +69,12 @@ jobs:
       # Checkout code from the repository
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      # Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
       # Deploy Admin Service
       - name: Deploy Admin Service
