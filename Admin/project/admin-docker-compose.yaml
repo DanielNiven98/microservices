@@ -28,7 +28,7 @@ services:
       - '8080:8080'
     depends_on:
       mongo:
-        condition: service_healthy
+        condition: service_healthy  # Ensure mongo is healthy
     environment:
       - MONGO_URI=mongodb://admin-mongo:27017/AdminDB
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}

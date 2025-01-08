@@ -89,18 +89,34 @@ jobs:
       - name: Wait for Admin Microservice to be Healthy
         run: |
           echo "Waiting for Admin service health check to pass..."
-          until [ "$(docker inspect --format '{{json .State.Health.Status}}' admin-mongodb)" == '"healthy"' ]; do
-            echo "Waiting for admin-mongodb to be healthy..."
+          for i in {1..30}; do
+            health_status=$(docker inspect --format '{{json .State.Health.Status}}' admin-mongodb)
+            if [ "$health_status" == '"healthy"' ]; then
+              echo "Admin microservice is healthy."
+              break
+            fi
+            echo "Waiting for admin-mongodb to be healthy... (Attempt $i)"
             sleep 10
           done
-          echo "Admin microservice is healthy."
+          if [ "$health_status" != '"healthy"' ]; then
+            echo "Admin microservice failed to become healthy."
+            exit 1
+          fi
 
       # Health check for User service
       - name: Wait for User Microservice to be Healthy
         run: |
           echo "Waiting for User service health check to pass..."
-          until [ "$(docker inspect --format '{{json .State.Health.Status}}' user-mongodb)" == '"healthy"' ]; do
-            echo "Waiting for user-mongodb to be healthy..."
+          for i in {1..30}; do
+            health_status=$(docker inspect --format '{{json .State.Health.Status}}' user-mongodb)
+            if [ "$health_status" == '"healthy"' ]; then
+              echo "User microservice is healthy."
+              break
+            fi
+            echo "Waiting for user-mongodb to be healthy... (Attempt $i)"
             sleep 10
           done
-          echo "User microservice is healthy."
+          if [ "$health_status" != '"healthy"' ]; then
+            echo "User microservice failed to become healthy."
+            exit 1
+          fi
