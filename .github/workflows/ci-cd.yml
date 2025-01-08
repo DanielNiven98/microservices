@@ -1,0 +1,65 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test Microservices
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+      # Checkout code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Set up Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build Admin Service
+      - name: Build Admin Service Docker Image
+        run: docker build -t microservices-admin ./Admin
+
+      # Build User Service
+      - name: Build User Service Docker Image
+        run: docker build -t microservices-user ./User
+
+      # Test Admin Service
+      - name: Run Admin Service Tests
+        run: docker run --rm microservices-admin npm test
+
+      # Test User Service
+      - name: Run User Service Tests
+        run: docker run --rm microservices-user npm test
+
+  deploy:
+    name: Deploy Microservices
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code from the repository
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Deploy Admin Service
+      - name: Deploy Admin Service
+        run: |
+          docker-compose -f ./Admin/project/admin-docker-compose.yaml -p admin up --build -d
+
+      # Deploy User Service
+      - name: Deploy User Service
+        run: |
+          docker-compose -f ./User/project/user-docker-compose.yaml -p user up --build -d
