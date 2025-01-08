@@ -1,9 +1,6 @@
 # Use the official Node.js lightweight image
 FROM node:18-alpine
 
-# Install Nginx
-RUN apk update && apk add --no-cache nginx
-
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
@@ -17,9 +14,8 @@ RUN npm install
 COPY backend ./backend
 COPY frontend ./frontend
 
-# Expose the ports
-EXPOSE 80
+# Expose the app port
 EXPOSE 8082
 
-# Start Nginx and the app
-CMD ["sh", "-c", "nginx && node backend/app.js"]
+# Start the Node.js application
+CMD ["node", "backend/app.js"]

@@ -1,30 +1,16 @@
 const express = require('express');
 const multer = require('multer');
+const { Storage } = require('@google-cloud/storage');
 const path = require('path');
-const fs = require('fs');
 const router = express.Router();
 
-// Directory to store videos
-const VIDEO_DIR = path.join(__dirname, '../videos');
+// Google Cloud Storage setup
+const storage = new Storage();
+const bucket = storage.bucket('nivenmoviebucket');  // Your GCS bucket name
 
-// Ensure the video directory exists
-if (!fs.existsSync(VIDEO_DIR)) {
-  fs.mkdirSync(VIDEO_DIR, { recursive: true });
-}
-
-// Configure Multer for video uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, VIDEO_DIR);
-  },
-  filename: (req, file, cb) => {
-    const sanitizedFileName = file.originalname.replace(/\s+/g, '_').toLowerCase();
-    cb(null, sanitizedFileName);
-  },
-});
-
+// Multer configuration: Use memory storage for file uploads
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(), // Store file in memory
   limits: { fileSize: 1024 * 1024 * 1024 }, // 1 GB limit
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('video/')) {
@@ -34,28 +20,65 @@ const upload = multer({
   },
 });
 
+// Upload a video to GCS
+router.post('/upload', upload.single('video'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file provided.' });
+  }
 
-// Fetch the list of videos
-router.get('/', (req, res) => {
-  fs.readdir(VIDEO_DIR, (err, files) => {
-    if (err) {
-      console.error('Error reading video directory:', err);
-      return res.status(500).json({ message: 'Error fetching videos.' });
-    }
+  const file = req.file;
+  const sanitizedFileName = file.originalname.replace(/\s+/g, '_').toLowerCase();
+  const gcsFile = bucket.file(`videos/${sanitizedFileName}`);
 
-    const movies = files
-      .filter(file => file.endsWith('.mp4'))
-      .map(file => ({
-        title: file.replace('.mp4', ''),
-        streamUrl: `/videos/${file}`, // FIXED: Proper string interpolation
-      }));
+  try {
+    const stream = gcsFile.createWriteStream({
+      metadata: { contentType: file.mimetype },
+      resumable: false,  // Set to false for simplicity in this example
+    });
+
+    stream.on('error', (err) => {
+      console.error('Error uploading to GCS:', err);
+      return res.status(500).json({ message: 'Error uploading video to GCS.' });
+    });
+
+    stream.on('finish', async () => {
+      // Make the file public after upload
+      await gcsFile.makePublic();
+      const publicUrl = `https://storage.googleapis.com/nivenmoviebucket/videos/${sanitizedFileName}`;
+
+      res.status(201).json({
+        message: 'Video uploaded successfully.',
+        url: publicUrl,
+      });
+    });
+
+    // End the stream to upload the file
+    stream.end(file.buffer);
+  } catch (error) {
+    console.error('Error uploading video:', error);
+    res.status(500).json({ message: 'Error uploading video.' });
+  }
+});
+
+// Fetch the list of videos from GCS
+router.get('/', async (req, res) => {
+  try {
+    const [files] = await bucket.getFiles({ prefix: 'videos/' });
+
+    const movies = files.map((file) => ({
+      title: file.name.replace('videos/', ''),  // Remove "videos/" prefix for cleaner display
+      url: `https://storage.googleapis.com/nivenmoviebucket/${file.name}`, // Public GCS URL
+    }));
 
     if (movies.length === 0) {
       return res.status(404).json({ message: 'No videos found.' });
     }
 
     res.json(movies);
-  });
+  } catch (error) {
+    console.error('Error fetching videos from GCS:', error);
+    res.status(500).json({ message: 'Error fetching videos from GCS.' });
+  }
 });
 
 module.exports = router;

@@ -4,53 +4,39 @@ services:
   mongo:
     image: mongo:latest
     container_name: user-mongodb
-    hostname: user-mongo  # Unique hostname for User MongoDB
+    hostname: user-mongo
     ports:
-      - '27018:27017'  # Exposes MongoDB on port 27018 of the host
+      - '27017:27017' 
     volumes:
       - user_mongo_data:/data/db
     restart: unless-stopped
     networks:
-      - user_network
+      - common_network
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: user-app
-    hostname: user-app  # Unique hostname for User App
+    hostname: user-app
     ports:
       - '8082:8082'
     depends_on:
       - mongo
     environment:
-      - MONGO_URI=mongodb://user-mongo:27017/UserDB  # Use the updated hostname
+      - MONGO_URI=mongodb://user-mongo:27017/UserDB  
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
     volumes:
       - ./backend:/usr/src/app/backend
       - ./videos:/usr/src/app/videos
     restart: unless-stopped
     networks:
-      - user_network
-    command: ["node", "backend/app.js"]  # Ensures only the app starts
-
-  nginx:
-    image: nginx:latest
-    container_name: user-nginx-video-server
-    hostname: user-nginx  # Unique hostname for User Nginx
-    ports:
-      - '8083:80'
-    volumes:
-      - ./videos:/usr/share/nginx/html/videos:ro
-    depends_on:
-      - app
-    restart: unless-stopped
-    networks:
-      - user_network
+      - common_network
+    command: ["node", "backend/app.js"]
 
 volumes:
   user_mongo_data:
 
 networks:
-  user_network:
+  common_network:
     driver: bridge

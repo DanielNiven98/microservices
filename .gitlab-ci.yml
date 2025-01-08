@@ -1,0 +1,66 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  ADMIN_IMAGE: microservices-admin
+  USER_IMAGE: microservices-user
+  ADMIN_PORT: 8080
+  USER_PORT: 8082
+
+# ---------------- Build Stage ----------------
+build_admin_service:
+  stage: build
+  script:
+    - echo "Building Admin Service Docker Image"
+    - docker build -t $ADMIN_IMAGE:latest ./Admin
+  tags:
+    - docker
+
+build_user_service:
+  stage: build
+  script:
+    - echo "Building User Service Docker Image"
+    - docker build -t $USER_IMAGE:latest ./User
+  tags:
+    - docker
+
+# ---------------- Test Stage ----------------
+test_admin_service:
+  stage: test
+  script:
+    - echo "Running Admin Service Tests"
+    - docker run --rm $ADMIN_IMAGE:latest npm test
+  tags:
+    - docker
+
+test_user_service:
+  stage: test
+  script:
+    - echo "Running User Service Tests"
+    - docker run --rm $USER_IMAGE:latest npm test
+  tags:
+    - docker
+
+# ---------------- Deploy Stage ----------------
+deploy_admin_service:
+  stage: deploy
+  script:
+    - echo "Deploying Admin Service"
+    - docker-compose -f ./Admin/project/admin-docker-compose.yaml -p admin up --build -d
+  only:
+    - main
+  tags:
+    - deploy
+
+deploy_user_service:
+  stage: deploy
+  script:
+    - echo "Deploying User Service"
+    - docker-compose -f ./User/project/user-docker-compose.yaml -p user up --build -d
+  only:
+    - main
+  tags:
+    - deploy
