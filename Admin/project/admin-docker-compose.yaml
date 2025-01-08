@@ -13,10 +13,10 @@ services:
     networks:
       - common_network
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "27017"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+  test: ["CMD", "mongo", "--eval", "db.runCommand('ping')"]
+  interval: 10s
+  timeout: 5s
+  retries: 3
 
   app:
     build:
