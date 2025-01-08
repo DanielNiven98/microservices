@@ -29,10 +29,18 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       # Debug Directory for Admin and User Services
-      - name: List Admin Service Files
+      - name: Debug Admin Service Files
         run: ls -R ./Admin/project
-      - name: List User Service Files
+      - name: Debug User Service Files
         run: ls -R ./User/project
+
+      # Ensure Dockerfile exists for Admin Service
+      - name: Check Admin Dockerfile
+        run: test -f ./Admin/project/Dockerfile || (echo "Admin Dockerfile not found!" && exit 1)
+
+      # Ensure Dockerfile exists for User Service
+      - name: Check User Dockerfile
+        run: test -f ./User/project/Dockerfile || (echo "User Dockerfile not found!" && exit 1)
 
       # Build Admin Service
       - name: Build Admin Service Docker Image
