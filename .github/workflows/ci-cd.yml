@@ -70,11 +70,13 @@ jobs:
       - name: Deploy Admin Service
         run: |
           cd Admin/project
+          docker pull 2481553/admin-service:latest
           docker-compose -f admin-docker-compose.yaml -p admin down
           docker-compose -f admin-docker-compose.yaml -p admin up --build -d
 
       - name: Deploy User Service
         run: |
           cd User/project
+          docker pull 2481553/user-service:latest
           docker-compose -f user-docker-compose.yaml -p user down
           docker-compose -f user-docker-compose.yaml -p user up --build -d
