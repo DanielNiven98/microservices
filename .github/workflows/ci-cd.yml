@@ -43,7 +43,7 @@ jobs:
           cd User/project
           docker-compose -f user-docker-compose.yaml -p user build
           docker images # Verify the built images
-          docker tag user_user:latest 2481553/user-service:latest
+          docker tag user-user:latest 2481553/user-service:latest
           docker push 2481553/user-service:latest
 
   deploy:
