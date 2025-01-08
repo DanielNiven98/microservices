@@ -35,7 +35,7 @@ jobs:
           cd Admin/project
           docker-compose -f admin-docker-compose.yaml -p admin build
           docker images # Verify the built images
-          docker tag admin_admin:latest 2481553/admin-service:latest
+          docker tag admin-admin:latest 2481553/admin-service:latest
           docker push 2481553/admin-service:latest
 
       - name: Build and Push User Service
