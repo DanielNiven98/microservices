@@ -24,10 +24,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      # Set up Docker Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       # Debug Admin Service Directory
       - name: Debug Admin Service Files
         run: ls -l ./Admin/project
@@ -38,27 +34,23 @@ jobs:
 
       # Ensure Dockerfile exists for Admin Service
       - name: Check Admin Dockerfile
-        run: |
-          if [ ! -f ./Admin/project/Dockerfile ]; then
-            echo "Admin Dockerfile not found!"
-            exit 1
-          fi
+        run: test -f ./Admin/project/Dockerfile || (echo "Admin Dockerfile not found!" && exit 1)
 
       # Ensure Dockerfile exists for User Service
       - name: Check User Dockerfile
-        run: |
-          if [ ! -f ./User/project/Dockerfile ]; then
-            echo "User Dockerfile not found!"
-            exit 1
-          fi
+        run: test -f ./User/project/Dockerfile || (echo "User Dockerfile not found!" && exit 1)
+
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       # Build Admin Service
       - name: Build Admin Service Docker Image
-        run: docker build -t microservices-admin -f ./Admin/project/Dockerfile ./Admin/project
+        run: docker build -t microservices-admin -f $GITHUB_WORKSPACE/Admin/project/Dockerfile $GITHUB_WORKSPACE/Admin/project
 
       # Build User Service
       - name: Build User Service Docker Image
-        run: docker build -t microservices-user -f ./User/project/Dockerfile ./User/project
+        run: docker build -t microservices-user -f $GITHUB_WORKSPACE/User/project/Dockerfile $GITHUB_WORKSPACE/User/project
 
       # Test Admin Service
       - name: Run Admin Service Tests
