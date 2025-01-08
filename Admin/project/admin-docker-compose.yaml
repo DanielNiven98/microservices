@@ -6,12 +6,12 @@ services:
     container_name: admin-mongodb
     hostname: admin-mongo
     ports:
-      - '27019:27017' 
+      - '27019:27017'
     volumes:
       - admin_mongo_data:/data/db
-    restart: unless-stopped
+    restart: always
     networks:
-      - common_network  # Updated network
+      - common_network
 
   app:
     build:
@@ -22,17 +22,18 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://admin-mongo:27017/AdminDB  
-      - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
-      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-nivenmoviebucket}
-      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-your-google-cloud-project-id}
+      MONGO_URI: mongodb://admin-mongo:27017/AdminDB
+      JWT_SECRET: ${JWT_SECRET:-your-very-secure-secret-key}
+      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-nivenmoviebucket}
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-your-google-cloud-project-id}
     volumes:
       - ./backend:/usr/src/app/backend
-    restart: unless-stopped
+    restart: always
     networks:
-      - common_network  
+      - common_network
     command: ["node", "backend/app.js"]
 
 volumes:

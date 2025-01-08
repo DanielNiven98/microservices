@@ -6,10 +6,10 @@ services:
     container_name: user-mongodb
     hostname: user-mongo
     ports:
-      - '27017:27017' 
+      - '27017:27017'
     volumes:
       - user_mongo_data:/data/db
-    restart: unless-stopped
+    restart: always
     networks:
       - common_network
 
@@ -22,14 +22,15 @@ services:
     ports:
       - '8082:8082'
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://user-mongo:27017/UserDB  
-      - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
+      MONGO_URI: mongodb://user-mongo:27017/UserDB
+      JWT_SECRET: ${JWT_SECRET:-your-very-secure-secret-key}
     volumes:
       - ./backend:/usr/src/app/backend
       - ./videos:/usr/src/app/videos
-    restart: unless-stopped
+    restart: always
     networks:
       - common_network
     command: ["node", "backend/app.js"]
