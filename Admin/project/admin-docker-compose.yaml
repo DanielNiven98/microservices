@@ -9,9 +9,14 @@ services:
       - '27019:27017'
     volumes:
       - admin_mongo_data:/data/db
-    restart: always
+    restart: unless-stopped
     networks:
       - common_network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   app:
     build:
@@ -25,13 +30,13 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      MONGO_URI: mongodb://admin-mongo:27017/AdminDB
-      JWT_SECRET: ${JWT_SECRET:-your-very-secure-secret-key}
-      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-nivenmoviebucket}
-      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-your-google-cloud-project-id}
+      - MONGO_URI=mongodb://admin-mongo:27017/AdminDB
+      - JWT_SECRET=${JWT_SECRET:-your-very-secure-secret-key}
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-nivenmoviebucket}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-your-google-cloud-project-id}
     volumes:
       - ./backend:/usr/src/app/backend
-    restart: always
+    restart: unless-stopped
     networks:
       - common_network
     command: ["node", "backend/app.js"]
