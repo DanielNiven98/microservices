@@ -27,12 +27,14 @@ jobs:
       # Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        # Debug Admin Service Directory
+- name: Debug Admin Service Files
+  run: ls -l ./Admin/project
 
-      # Debug Directory for Admin and User Services
-      - name: Debug Admin Service Files
-        run: ls -R ./Admin/project
-      - name: Debug User Service Files
-        run: ls -R ./User/project
+# Debug User Service Directory
+- name: Debug User Service Files
+  run: ls -l ./User/project
+
 
       # Ensure Dockerfile exists for Admin Service
       - name: Check Admin Dockerfile
@@ -42,9 +44,8 @@ jobs:
       - name: Check User Dockerfile
         run: test -f ./User/project/Dockerfile || (echo "User Dockerfile not found!" && exit 1)
 
-      # Build Admin Service
       - name: Build Admin Service Docker Image
-        run: docker build -t microservices-admin -f ./Admin/project/Dockerfile ./Admin/project
+  run: docker build -t microservices-admin -f ./Admin/project/Dockerfile ./Admin/project
 
       # Build User Service
       - name: Build User Service Docker Image
