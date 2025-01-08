@@ -84,3 +84,23 @@ jobs:
       # Deploy User Microservice
       - name: Deploy User Microservice
         run: docker-compose -f ./User/project/user-docker-compose.yaml -p user up --build -d
+
+      # Health check for Admin service
+      - name: Wait for Admin Microservice to be Healthy
+        run: |
+          echo "Waiting for Admin service health check to pass..."
+          until [ "$(docker inspect --format '{{json .State.Health.Status}}' admin-mongodb)" == '"healthy"' ]; do
+            echo "Waiting for admin-mongodb to be healthy..."
+            sleep 10
+          done
+          echo "Admin microservice is healthy."
+
+      # Health check for User service
+      - name: Wait for User Microservice to be Healthy
+        run: |
+          echo "Waiting for User service health check to pass..."
+          until [ "$(docker inspect --format '{{json .State.Health.Status}}' user-mongodb)" == '"healthy"' ]; do
+            echo "Waiting for user-mongodb to be healthy..."
+            sleep 10
+          done
+          echo "User microservice is healthy."
