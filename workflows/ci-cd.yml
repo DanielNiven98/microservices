@@ -66,9 +66,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa  # Add the private key from GitHub secrets
           chmod 600 ~/.ssh/id_rsa
-          # Make sure known_hosts file is created if not present
+          # Ensure known_hosts file exists
           if [ ! -f ~/.ssh/known_hosts ]; then touch ~/.ssh/known_hosts; fi
-          ssh-keyscan -H 3.87.176.129 >> ~/.ssh/known_hosts  # Add the new EC2 host to known hosts
+          ssh-keyscan -H 3.87.176.129 >> ~/.ssh/known_hosts  # Use the new EC2 IP
 
       - name: Test SSH Connection
         run: |
