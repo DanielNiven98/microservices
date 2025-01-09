@@ -138,25 +138,26 @@
     const token = localStorage.getItem('jwt'); // Get JWT token
     let currentUser = null; // Track the current user being edited
 
-    // Fetch users from the database (via RESTful API)
     async function fetchUsers() {
-      try {
-        const response = await fetch('/admin/users', {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${token}` }
-        });
+  try {
+    const response = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/admin/users', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` }  // Ensure token is stored correctly
+    });
 
-        if (response.ok) {
-          const users = await response.json();
-          populateTable(users);
-        } else {
-          console.error('Failed to fetch users');
-          alert('Unable to fetch users. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
+    if (response.ok) {
+      const users = await response.json();
+      populateTable(users);  // Make sure you have a function to populate the table
+    } else {
+      console.error('Failed to fetch users');
+      alert('Unable to fetch users. Please try again.');
     }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+
 
     // Populate the table with users
     function populateTable(users) {

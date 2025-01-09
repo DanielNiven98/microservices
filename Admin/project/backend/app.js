@@ -154,13 +154,12 @@ app.get("/movies", authenticateJWT, async (req, res) => {
   }
 });
 
-// Fetch Users from UserDB using direct MongoDB connection
 app.get("/admin/users", authenticateJWT, async (req, res) => {
   try {
-    const userMongoURI = "mongodb://user-mongo:27017/UserDB"; // UserDB connection URI
+    const userMongoURI = "mongodb://user-mongo:27017/UserDB"; // Ensure this is the correct URI
     const userDbConnection = await mongoose.createConnection(userMongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
-    const UserModel = userDbConnection.model("User", userSchema); // Use the same User schema for querying the UserDB
+    const UserModel = userDbConnection.model("User", userSchema); // Same schema for querying the UserDB
     const users = await UserModel.find(); // Fetch all users from the UserDB
 
     res.status(200).json(users); // Return the list of users fetched from the UserDB
