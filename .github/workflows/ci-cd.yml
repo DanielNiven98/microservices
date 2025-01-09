@@ -61,33 +61,24 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Docker Compose
+      - name: Configure SSH
         run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
-      - name: Clean Up Containers and Networks
+      - name: Deploy to Cloud9
         run: |
+          ssh ec2-user@54.91.154.173 << 'EOF'
           docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
           docker-compose -f User/project/user-docker-compose.yaml -p user down || true
           docker network rm app-network || true
-
-      - name: Create app-network
-        run: |
           docker network create app-network || true
-
-      - name: Deploy Admin Service
-        run: |
           cd Admin/project
           docker-compose -f admin-docker-compose.yaml -p admin up --build --force-recreate -d
-
-      - name: Deploy User Service
-        run: |
-          cd User/project
+          cd ../../User/project
           docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
-
-      - name: Verify Network and Containers
-        run: |
           docker network inspect app-network
           docker ps
+          EOF
