@@ -76,26 +76,11 @@ jobs:
       - name: Start SSH Agent and Add Key with passphrase
         run: |
           eval $(ssh-agent -s)  # Start the SSH agent
-          echo "Passphrase: ${{ secrets.SSH_PASSPHRASE }}"  # Debugging: Check if passphrase is available
-          echo "Checking if SSH agent is running..."
-          ps aux | grep ssh-agent  # Debug: Check if SSH agent is running
-
-          # Try adding the key with ssh-add
-          echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa || echo "ssh-add failed"  # Add the private key and passphrase
-
-          # Verify the SSH agent has the key
-          ssh-add -l  # List added keys to verify key is loaded
-
-          echo "Agent process ID: $(ps -ef | grep ssh-agent | awk '{print $2}')"  # Confirm process ID for the SSH agent
-
-          # Debugging the SSH Agent environment
-          echo "SSH_AGENT_PID: $SSH_AGENT_PID"  # Output the SSH agent's PID to check if it was successfully set
-          echo "SSH_AUTH_SOCK: $SSH_AUTH_SOCK"  # Output the authentication socket
-          echo "Added key to SSH agent successfully."  # Debugging confirmation
+          echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
 
       - name: Test SSH Connection
         run: |
-          ssh -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
+          ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
 
       - name: Deploy to Cloud9
         run: |
