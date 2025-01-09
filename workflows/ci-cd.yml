@@ -66,15 +66,15 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa  # Add the private key from GitHub secrets
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 3.87.176.129 >> ~/.ssh/known_hosts  # Update IP address to new EC2 instance
 
       - name: Test SSH Connection
         run: |
-          ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
+          ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@3.87.176.129 echo "SSH Connection Successful"  # Update IP address to new EC2 instance
 
       - name: Deploy to Cloud9
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@3.87.176.129 << 'EOF'  # Update IP address to new EC2 instance
           set -e
           cd ~/environment/Microservices
           docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
@@ -91,7 +91,7 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@3.87.176.129 << 'EOF'  # Update IP address to new EC2 instance
           docker ps
           docker network inspect app-network
           EOF
