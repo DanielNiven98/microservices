@@ -79,6 +79,8 @@ jobs:
           echo "Passphrase: ${{ secrets.SSH_PASSPHRASE }}"  # Debugging: Check if passphrase is available
           echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
           ssh-add -l  # List added keys to verify key is loaded
+          echo "Added key to SSH agent successfully."  # Debugging confirmation
+
 
       - name: Test SSH Connection
         run: |
