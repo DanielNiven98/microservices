@@ -68,10 +68,15 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
-      - name: Start SSH Agent and Add Key
+      - name: Install sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass  # Install sshpass to handle the passphrase non-interactively
+
+      - name: Start SSH Agent and Add Key with passphrase
         run: |
           eval $(ssh-agent -s)  # Start the SSH agent
-          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
+          echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -e ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
 
       - name: Test SSH Connection
         run: |
