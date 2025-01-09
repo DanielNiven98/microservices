@@ -91,3 +91,7 @@ jobs:
           docker ps
           docker network inspect app-network
           EOF
+          
+           - name: Debug SSH Connection
+        run: |
+          ssh -v -i ~/.ssh/id_rsa ec2-user@54.91.154.173 echo "Connection Successful
