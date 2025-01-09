@@ -76,7 +76,9 @@ jobs:
       - name: Start SSH Agent and Add Key with passphrase
         run: |
           eval $(ssh-agent -s)  # Start the SSH agent
+          echo "Passphrase: ${{ secrets.SSH_PASSPHRASE }}"  # Debugging: Check if passphrase is available
           echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
+          ssh-add -l  # List added keys to verify key is loaded
 
       - name: Test SSH Connection
         run: |
