@@ -68,21 +68,13 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
-      - name: Install sshpass
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass  # Install sshpass to handle the passphrase non-interactively
-
-      - name: Start SSH Agent and Add Key with passphrase
+      - name: Start SSH Agent and Add Key (no passphrase)
         run: |
           eval $(ssh-agent -s)  # Start the SSH agent
-          echo "SSH agent started, adding private key..."
-          echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
-          ssh-add -l  # List the added keys for debugging
+          ssh-add ~/.ssh/id_rsa  # Add the private key without passphrase
 
       - name: Test SSH Connection
         run: |
-          echo "Testing SSH connection to EC2..."
           ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
 
       - name: Deploy to Cloud9
