@@ -55,43 +55,48 @@ jobs:
           docker push 2481553/user-service:latest
 
   deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+  needs: build
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.CLOUD9_SSH_KEY }}" | base64 --decode > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.CLOUD9_SSH_KEY }}" | base64 --decode > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
-      - name: Test SSH Connection
-        run: |
-          ssh -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
+    - name: Start SSH Agent and Add Key
+      run: |
+        eval $(ssh-agent -s)  # Start the SSH agent
+        echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_rsa  # Add the key with the passphrase
 
-      - name: Deploy to Cloud9
-        run: |
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 << 'EOF'
-          set -e
-          cd ~/environment/Microservices
-          docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
-          docker-compose -f User/project/user-docker-compose.yaml -p user down || true
-          docker network rm app-network || true
-          docker network create app-network || true
-          cd Admin/project
-          docker-compose -f admin-docker-compose.yaml -p admin up --build --force-recreate -d
-          cd ../../User/project
-          docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
-          docker network inspect app-network
-          docker ps
-          EOF
+    - name: Test SSH Connection
+      run: |
+        ssh -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
 
-      - name: Verify Deployment
-        run: |
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 << 'EOF'
-          docker ps
-          docker network inspect app-network
-          EOF
+    - name: Deploy to Cloud9
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+        set -e
+        cd ~/environment/Microservices
+        docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
+        docker-compose -f User/project/user-docker-compose.yaml -p user down || true
+        docker network rm app-network || true
+        docker network create app-network || true
+        cd Admin/project
+        docker-compose -f admin-docker-compose.yaml -p admin up --build --force-recreate -d
+        cd ../../User/project
+        docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
+        docker network inspect app-network
+        docker ps
+        EOF
+
+    - name: Verify Deployment
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+        docker ps
+        docker network inspect app-network
+        EOF
