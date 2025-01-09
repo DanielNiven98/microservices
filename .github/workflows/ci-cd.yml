@@ -70,11 +70,11 @@ jobs:
 
       - name: Test SSH Connection
         run: |
-          ssh -v -o StrictHostKeyChecking=no ec2-user@54.91.154.173 echo "SSH Connection Successful"
+          ssh -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
 
       - name: Deploy to Cloud9
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 << 'EOF'
           set -e
           cd ~/environment/Microservices
           docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
@@ -91,7 +91,7 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 << 'EOF'
           docker ps
           docker network inspect app-network
           EOF
