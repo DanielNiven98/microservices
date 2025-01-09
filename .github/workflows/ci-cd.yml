@@ -68,11 +68,6 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
-      - name: Start SSH Agent and Add Key (no passphrase)
-        run: |
-          eval $(ssh-agent -s)  # Start the SSH agent
-          ssh-add ~/.ssh/id_rsa  # Add the private key without passphrase
-
       - name: Test SSH Connection
         run: |
           ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.91.154.173 echo "SSH Connection Successful"
