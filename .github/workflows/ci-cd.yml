@@ -73,11 +73,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sshpass  # Install sshpass to handle the passphrase non-interactively
 
-     - name: Start SSH Agent and Add Key with passphrase
+      - name: Start SSH Agent and Add Key with passphrase
         run: |
           eval $(ssh-agent -s)  # Start the SSH agent
-          echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa  
-
+          echo "${{ secrets.SSH_PASSPHRASE }}" | sshpass -p "${{ secrets.SSH_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
 
       - name: Test SSH Connection
         run: |
