@@ -76,7 +76,7 @@ jobs:
       - name: Start SSH Agent and Add Key with passphrase
         run: |
           eval $(ssh-agent -s)  # Start the SSH agent
-          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_rsa  # Add the private key and passphrase
+          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add - <<< "${{ secrets.CLOUD9_SSH_KEY }}"  # Add the private key and passphrase
 
       - name: Test SSH Connection
         run: |
