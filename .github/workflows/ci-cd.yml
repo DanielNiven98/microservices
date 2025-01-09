@@ -64,7 +64,7 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.CLOUD9_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.CLOUD9_SSH_KEY }}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
@@ -87,4 +87,11 @@ jobs:
           docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
           docker network inspect app-network
           docker ps
+          EOF
+
+      - name: Verify Deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
+          docker ps
+          docker network inspect app-network
           EOF
