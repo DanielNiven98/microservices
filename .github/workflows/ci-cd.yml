@@ -68,6 +68,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.91.154.173 >> ~/.ssh/known_hosts
 
+      - name: Test SSH Connection
+        run: |
+          ssh -v -o StrictHostKeyChecking=no ec2-user@54.91.154.173 echo "SSH Connection Successful"
+
       - name: Deploy to Cloud9
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
@@ -84,14 +88,3 @@ jobs:
           docker network inspect app-network
           docker ps
           EOF
-
-      - name: Verify Deployment
-        run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.91.154.173 << 'EOF'
-          docker ps
-          docker network inspect app-network
-          EOF
-          
-           - name: Debug SSH Connection
-        run: |
-          ssh -v -i ~/.ssh/id_rsa ec2-user@54.91.154.173 echo "Connection Successful
