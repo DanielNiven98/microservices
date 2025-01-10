@@ -2,8 +2,8 @@ version: "3.8"
 services:
   nginx:
     build:
-      context: ./nginx  # Path to the NGINX folder
-      dockerfile: Dockerfile  # Dockerfile in the NGINX folder
+      context: ./nginx  # Path to the NGINX folder (adjusted relative to workflow)
+      dockerfile: Dockerfile
     ports:
       - "80:80"
     depends_on:
@@ -12,12 +12,12 @@ services:
     networks:
       - app-network
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Ensure this file exists
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
 
   admin:
     build:
       context: ../Admin/project  # Path relative to the nginx directory
-      dockerfile: Dockerfile  # Make sure the Dockerfile is present in the Admin folder
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     networks:
@@ -26,7 +26,7 @@ services:
   user:
     build:
       context: ../User/project  # Path relative to the nginx directory
-      dockerfile: Dockerfile  # Make sure the Dockerfile is present in the User folder
+      dockerfile: Dockerfile
     ports:
       - "8082:8082"
     networks:
