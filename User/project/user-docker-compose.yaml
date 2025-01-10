@@ -12,7 +12,7 @@ services:
       user-mongo:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "echo 'db.runCommand({ ping: 1 })' | mongosh localhost:27017"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
       timeout: 10s
       retries: 5
