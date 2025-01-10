@@ -12,12 +12,12 @@ services:
     networks:
       - app-network
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Ensure this file exists
 
   admin:
     build:
       context: ../Admin/project  # Path relative to the nginx directory
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # Make sure the Dockerfile is present in the Admin folder
     ports:
       - "8080:8080"
     networks:
@@ -26,7 +26,7 @@ services:
   user:
     build:
       context: ../User/project  # Path relative to the nginx directory
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # Make sure the Dockerfile is present in the User folder
     ports:
       - "8082:8082"
     networks:
