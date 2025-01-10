@@ -2,8 +2,8 @@ version: "3.8"
 services:
   nginx:
     build:
-      context: ./nginx  # Make sure this path is correct
-      dockerfile: Dockerfile
+      context: ./nginx  # Path to the NGINX folder
+      dockerfile: Dockerfile  # Dockerfile in the NGINX folder
     ports:
       - "80:80"
     depends_on:
@@ -16,7 +16,7 @@ services:
 
   admin:
     build:
-      context: ./Admin/project  # Correct path
+      context: ../Admin/project  # Path relative to the nginx directory
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -25,7 +25,7 @@ services:
 
   user:
     build:
-      context: ./User/project  # Correct path
+      context: ../User/project  # Path relative to the nginx directory
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
