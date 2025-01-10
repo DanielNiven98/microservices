@@ -6,7 +6,6 @@ services:
       dockerfile: Dockerfile  # Dockerfile in the NGINX folder
     ports:
       - "80:80"
-      - "8083:8082"  # Change the port here for user service to avoid conflict
     depends_on:
       - admin
       - user
@@ -20,7 +19,7 @@ services:
       context: ../Admin/project  # Path relative to the nginx directory
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8081:8080"  # Change host port to avoid conflict
     networks:
       - app-network
 
@@ -29,7 +28,7 @@ services:
       context: ../User/project  # Path relative to the nginx directory
       dockerfile: Dockerfile
     ports:
-      - "8082:8082"  # Keep the same port for the user service
+      - "8083:8082"  # Change host port to avoid conflict
     networks:
       - app-network
 
