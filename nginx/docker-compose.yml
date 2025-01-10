@@ -2,17 +2,35 @@ version: "3.8"
 services:
   nginx:
     build:
-      context: ./nginx  # Path to the NGINX folder
-      dockerfile: Dockerfile  # Dockerfile in the NGINX folder
+      context: ./nginx  # Make sure this path is correct
+      dockerfile: Dockerfile
     ports:
-      - "80:80"  # Expose NGINX on port 80 for HTTP traffic
+      - "80:80"
     depends_on:
       - admin
       - user
     networks:
       - app-network
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Link NGINX config to container
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+  admin:
+    build:
+      context: ./Admin/project  # Correct path
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  user:
+    build:
+      context: ./User/project  # Correct path
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - app-network
 
 networks:
   app-network:
