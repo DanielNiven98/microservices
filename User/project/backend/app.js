@@ -86,7 +86,7 @@ const authenticateJWT = (req, res, next) => {
 // ---------------- Routes ---------------- //
 
 // Health Check Route
-app.get("/health", (req, res) => res.status(200).send("API is running!"));
+app.get("/health", (req, res) => res.status(200).send("User API is running!"));
 
 // Serve Static Files (Frontend Pages)
 app.get("/", (req, res) => res.redirect("/login.html"));
@@ -100,7 +100,6 @@ app.get("/signup.html", (req, res) =>
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
-
 
 // Video upload route
 app.post(
