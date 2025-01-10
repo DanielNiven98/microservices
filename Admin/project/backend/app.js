@@ -22,7 +22,9 @@ const storage = new Storage({ projectId: process.env.GCP_PROJECT_ID });
 const bucket = storage.bucket(GCS_BUCKET_NAME);
 
 // ---------------- MongoDB Connection ---------------- //
-mongoose.connect("mongodb://mongo:27017/AdminDB");
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 
 // ---------------- Mongoose Schema & Model ---------------- //
@@ -154,18 +156,28 @@ app.get("/movies", authenticateJWT, async (req, res) => {
   }
 });
 
+// Fetch Users from AdminDB
 app.get("/admin/users", authenticateJWT, async (req, res) => {
   try {
-    const userMongoURI = "mongodb://user-mongo:27017/UserDB"; // Ensure this is the correct URI
-    const userDbConnection = await mongoose.createConnection(userMongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
+    const users = await User.find(); // Fetch all users from AdminDB
+    res.status(200).json({ source: "AdminDB", users }); // Return the list of users and source
+  } catch (error) {
+    console.error("Error fetching users from AdminDB:", error);
+    res.status(500).json({ message: "Error fetching users from AdminDB." });
+  }
+});
 
-    const UserModel = userDbConnection.model("User", userSchema); // Same schema for querying the UserDB
-    const users = await UserModel.find(); // Fetch all users from the UserDB
+// Fetch Users from UserDB
+app.get("/users", authenticateJWT, async (req, res) => {
+  try {
+    const userDbConnection = mongoose.createConnection("mongodb://user-mongo:27017/UserDB", { useNewUrlParser: true, useUnifiedTopology: true });
+    const UserModel = userDbConnection.model("User", userSchema); // Use the same User schema for querying UserDB
+    const users = await UserModel.find(); // Fetch all users from UserDB
 
-    res.status(200).json(users); // Return the list of users fetched from the UserDB
+    res.status(200).json({ source: "UserDB", users }); // Return the list of users and source
   } catch (error) {
     console.error("Error fetching users from UserDB:", error);
-    res.status(500).json({ message: "Error fetching users." });
+    res.status(500).json({ message: "Error fetching users from UserDB." });
   }
 });
 
