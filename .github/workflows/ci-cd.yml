@@ -65,15 +65,15 @@ jobs:
           # Ensure known_hosts file exists
           if [ ! -f ~/.ssh/known_hosts ]; then touch ~/.ssh/known_hosts; fi
           # Ensure the EC2 public IP is properly scanned and added to known_hosts
-          ssh-keyscan -H 54.147.186.247 >> ~/.ssh/known_hosts  # Use the public IP here
+          ssh-keyscan -H 34.227.72.153 >> ~/.ssh/known_hosts  # Use the updated EC2 public IP here
 
       - name: Test SSH Connection
         run: |
-          ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@54.147.186.247 echo "SSH Connection Successful"
+          ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@34.227.72.153 echo "SSH Connection Successful"
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.147.186.247 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@34.227.72.153 << 'EOF'
           set -e
           cd ~/environment/microservices  # Ensure correct lowercase folder name here
           docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
@@ -92,7 +92,7 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@54.147.186.247 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@34.227.72.153 << 'EOF'
           docker ps
           docker network inspect app-network
           EOF
