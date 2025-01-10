@@ -54,6 +54,13 @@ jobs:
           docker tag user-user:latest 2481553/user-service:latest
           docker push 2481553/user-service:latest
 
+      - name: Build and Push NGINX Service
+        run: |
+          cd nginx
+          docker-compose -f nginx-docker-compose.yaml -p nginx build
+          docker tag nginx:latest 2481553/nginx-service:latest
+          docker push 2481553/nginx-service:latest
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -82,12 +89,15 @@ jobs:
           cd ~/environment/microservices  # Ensure correct lowercase folder name here
           docker-compose -f Admin/project/admin-docker-compose.yaml -p admin down || true
           docker-compose -f User/project/user-docker-compose.yaml -p user down || true
+          docker-compose -f nginx/nginx-docker-compose.yaml -p nginx down || true
           docker network rm app-network || true
           docker network create app-network || true
           cd Admin/project
           docker-compose -f admin-docker-compose.yaml -p admin up --build --force-recreate -d
           cd ../../User/project
           docker-compose -f user-docker-compose.yaml -p user up --build --force-recreate -d
+          cd ../../nginx
+          docker-compose -f nginx-docker-compose.yaml -p nginx up --build --force-recreate -d
           docker network inspect app-network
           docker ps
           EOF

@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  nginx:
+    build:
+      context: ./nginx  # Path to the NGINX folder
+      dockerfile: Dockerfile  # Dockerfile in the NGINX folder
+    ports:
+      - "80:80"  # Expose NGINX on port 80 for HTTP traffic
+    depends_on:
+      - admin
+      - user
+    networks:
+      - app-network
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Link NGINX config to container
+
+networks:
+  app-network:
+    external: true
