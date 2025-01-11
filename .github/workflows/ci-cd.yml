@@ -71,6 +71,15 @@ jobs:
         run: |
           ssh -v -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@34.233.52.146 echo "SSH Connection Successful"
 
+      - name: Clean up Old Docker Containers and Resources
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@34.233.52.146 << 'EOF'
+            # Remove unused containers, images, and networks to free up space
+            docker system prune -f
+            docker volume prune -f
+            docker network prune -f
+          EOF
+
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@34.233.52.146 << 'EOF'
