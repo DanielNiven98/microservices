@@ -167,17 +167,50 @@ app.get("/admin/users", authenticateJWT, async (req, res) => {
   }
 });
 
-// Fetch Users from UserDB
-app.get("/users", authenticateJWT, async (req, res) => {
+// Update Admin or Regular User
+app.put("/admin/users/:username", authenticateJWT, async (req, res) => {
   try {
-    const userDbConnection = mongoose.createConnection("mongodb://user-mongo:27017/UserDB", { useNewUrlParser: true, useUnifiedTopology: true });
-    const UserModel = userDbConnection.model("User", userSchema); // Use the same User schema for querying UserDB
-    const users = await UserModel.find(); // Fetch all users from UserDB
+    const { username } = req.params;
+    const { email, newPassword } = req.body;
 
-    res.status(200).json({ source: "UserDB", users }); // Return the list of users and source
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Only admins can update users." });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (email) user.email = email;
+    if (newPassword) user.password = await bcrypt.hash(newPassword, 10);
+
+    await user.save();
+    res.status(200).json({ message: "User updated successfully." });
   } catch (error) {
-    console.error("Error fetching users from UserDB:", error);
-    res.status(500).json({ message: "Error fetching users from UserDB." });
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Error updating user." });
+  }
+});
+
+// Delete User (Admin Only)
+app.delete("/admin/users/:username", authenticateJWT, async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Only admins can delete users." });
+    }
+
+    const user = await User.findOneAndDelete({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: `User ${username} deleted successfully.` });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Error deleting user." });
   }
 });
 
@@ -268,93 +301,6 @@ app.get("/watchlist", authenticateJWT, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Error fetching watchlist." });
   }
-});
-
-// User Signup
-app.post("/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "All fields are required." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashedPassword });
-    await user.save();
-
-    res.status(201).json({ message: "User registered successfully." });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "Username or email already exists." });
-    }
-    res.status(500).json({ message: "Error registering user. Please try again." });
-  }
-});
-
-// User Login
-app.post("/login", async (req, res) => {
-  try {
-    const { emailOrUsername, password } = req.body;
-    const user = await User.findOne({
-      $or: [{ username: emailOrUsername }, { email: emailOrUsername }],
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: "Incorrect password." });
-    }
-
-    const token = generateToken({ email: user.email, username: user.username });
-    res.json({ message: "Login successful.", token });
-  } catch (error) {
-    res.status(500).json({ message: "Error logging in. Please try again." });
-  }
-});
-
-// Fetch Logged-In User Info
-app.get("/user", authenticateJWT, (req, res) => {
-  res.json({
-    email: req.user.email,
-    username: req.user.username,
-  });
-});
-
-// Update User Profile
-app.put("/user/update", authenticateJWT, async (req, res) => {
-  try {
-    const { email, newPassword } = req.body;
-
-    if (!email && !newPassword) {
-      return res.status(400).json({ message: "Please provide an email or new password." });
-    }
-
-    const user = await User.findOne({ username: req.user.username });
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    if (email) {
-      user.email = email;
-    }
-    if (newPassword) {
-      user.password = await bcrypt.hash(newPassword, 10);
-    }
-
-    await user.save();
-    res.status(200).json({ message: "Profile updated successfully." });
-  } catch (error) {
-    console.error("Error during profile update:", error);
-    res.status(500).json({ message: "An error occurred while updating your profile." });
-  }
-});
-
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
 });
 
 // ---------------- Start Server ---------------- //
