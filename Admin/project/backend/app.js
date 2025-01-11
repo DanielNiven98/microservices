@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const multer = require("multer");
-const axios = require("axios");
 const path = require("path");
 const { Storage } = require("@google-cloud/storage");
 require("dotenv").config();
@@ -25,7 +24,6 @@ const bucket = storage.bucket(GCS_BUCKET_NAME);
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
-
 
 // ---------------- Mongoose Schema & Model ---------------- //
 const userSchema = new mongoose.Schema({
@@ -300,6 +298,54 @@ app.get("/watchlist", authenticateJWT, async (req, res) => {
     res.status(200).json({ watchlist: user.watchlist });
   } catch (error) {
     res.status(500).json({ message: "Error fetching watchlist." });
+  }
+});
+
+// ---------------- SignUp and Login ---------------- //
+
+// User Signup
+app.post("/signup", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashedPassword });
+    await user.save();
+
+    res.status(201).json({ message: "User registered successfully." });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Username or email already exists." });
+    }
+    res.status(500).json({ message: "Error registering user. Please try again." });
+  }
+});
+
+// User Login
+app.post("/login", async (req, res) => {
+  try {
+    const { emailOrUsername, password } = req.body;
+    const user = await User.findOne({
+      $or: [{ username: emailOrUsername }, { email: emailOrUsername }],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    const token = generateToken({ email: user.email, username: user.username });
+    res.json({ message: "Login successful.", token });
+  } catch (error) {
+    res.status(500).json({ message: "Error logging in. Please try again." });
   }
 });
 
