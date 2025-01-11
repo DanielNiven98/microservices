@@ -92,6 +92,91 @@ app.get("/signup.html", (req, res) =>
   res.sendFile(path.join(__dirname, "../frontend/signup.html"))
 );
 
+// Create User Route (Writes to UserDB)
+app.post("/signup", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashedPassword });
+    await user.save();
+
+    res.status(201).json({ message: "User created successfully in UserDB." });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Username or email already exists." });
+    }
+    res.status(500).json({ message: "Error creating user in UserDB. Please try again." });
+  }
+});
+
+// Edit User Route (Update user info in UserDB)
+app.put("/users/:username", authenticateJWT, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { newUsername, email } = req.body;
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (newUsername) user.username = newUsername;
+    if (email) user.email = email;
+
+    await user.save();
+    res.status(200).json({ message: "User updated successfully." });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "An error occurred while updating the user." });
+  }
+});
+
+// Delete User Route (Delete a user from UserDB)
+app.delete("/users/:username", authenticateJWT, async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const user = await User.findOneAndDelete({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: "User deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "An error occurred while deleting the user." });
+  }
+});
+
+// Fetch All Users from UserDB
+app.get("/users", authenticateJWT, async (req, res) => {
+  try {
+    const users = await User.find(); // Fetch all users from UserDB
+    res.status(200).json({ source: "UserDB", users }); // Return the list of users and source
+  } catch (error) {
+    console.error("Error fetching users from UserDB:", error);
+    res.status(500).json({ message: "Error fetching users from UserDB." });
+  }
+});
+
+// Fetch Users from AdminDB
+app.get("/admin/users", authenticateJWT, async (req, res) => {
+  try {
+    const users = await User.find(); // Fetch all users from AdminDB
+    res.status(200).json({ source: "AdminDB", users }); // Return the list of users and source
+  } catch (error) {
+    console.error("Error fetching users from AdminDB:", error);
+    res.status(500).json({ message: "Error fetching users from AdminDB." });
+  }
+});
+
+// ---------------- Video Upload and Watchlist ---------------- //
+
 // Video upload route
 app.post(
   "/movies/upload",
@@ -156,31 +241,6 @@ app.get("/movies", authenticateJWT, async (req, res) => {
   }
 });
 
-// Fetch Users from AdminDB
-app.get("/admin/users", authenticateJWT, async (req, res) => {
-  try {
-    const users = await User.find(); // Fetch all users from AdminDB
-    res.status(200).json({ source: "AdminDB", users }); // Return the list of users and source
-  } catch (error) {
-    console.error("Error fetching users from AdminDB:", error);
-    res.status(500).json({ message: "Error fetching users from AdminDB." });
-  }
-});
-
-// Fetch Users from UserDB
-app.get("/users", authenticateJWT, async (req, res) => {
-  try {
-    const userDbConnection = mongoose.createConnection("mongodb://user-mongo:27017/UserDB", { useNewUrlParser: true, useUnifiedTopology: true });
-    const UserModel = userDbConnection.model("User", userSchema); // Use the same User schema for querying UserDB
-    const users = await UserModel.find(); // Fetch all users from UserDB
-
-    res.status(200).json({ source: "UserDB", users }); // Return the list of users and source
-  } catch (error) {
-    console.error("Error fetching users from UserDB:", error);
-    res.status(500).json({ message: "Error fetching users from UserDB." });
-  }
-});
-
 // Add User to the Watchlist
 app.post("/watchlist/add", authenticateJWT, async (req, res) => {
   const { videoUrl } = req.body;
@@ -242,94 +302,6 @@ app.get("/watchlist", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "Error fetching watchlist." });
   }
 });
-
-// User Signup
-app.post("/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "All fields are required." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashedPassword });
-    await user.save();
-
-    res.status(201).json({ message: "User registered successfully." });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "Username or email already exists." });
-    }
-    res.status(500).json({ message: "Error registering user. Please try again." });
-  }
-});
-
-// User Login
-app.post("/login", async (req, res) => {
-  try {
-    const { emailOrUsername, password } = req.body;
-    const user = await User.findOne({
-      $or: [{ username: emailOrUsername }, { email: emailOrUsername }],
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: "Incorrect password." });
-    }
-
-    const token = generateToken({ email: user.email, username: user.username });
-    res.json({ message: "Login successful.", token });
-  } catch (error) {
-    res.status(500).json({ message: "Error logging in. Please try again." });
-  }
-});
-
-// Fetch Logged-In User Info
-app.get("/user", authenticateJWT, (req, res) => {
-  res.json({
-    email: req.user.email,
-    username: req.user.username,
-  });
-});
-
-// Update User Profile
-app.put("/user/update", authenticateJWT, async (req, res) => {
-  try {
-    const { email, newPassword } = req.body;
-
-    if (!email && !newPassword) {
-      return res.status(400).json({ message: "Please provide an email or new password." });
-    }
-
-    const user = await User.findOne({ username: req.user.username });
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    if (email) {
-      user.email = email;
-    }
-    if (newPassword) {
-      user.password = await bcrypt.hash(newPassword, 10);
-    }
-
-    await user.save();
-    res.status(200).json({ message: "Profile updated successfully." });
-  } catch (error) {
-    console.error("Error during profile update:", error);
-    res.status(500).json({ message: "An error occurred while updating your profile." });
-  }
-});
-
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
-});
-
 
 // ---------------- Start Server ---------------- //
 app.listen(PORT, "0.0.0.0", () => {
