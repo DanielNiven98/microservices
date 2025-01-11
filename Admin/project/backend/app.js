@@ -92,6 +92,31 @@ app.get("/signup.html", (req, res) =>
   res.sendFile(path.join(__dirname, "../frontend/signup.html"))
 );
 
+// Login route
+app.post("/login", async (req, res) => {
+  try {
+    const { emailOrUsername, password } = req.body;
+
+    const user = await User.findOne({
+      $or: [{ username: emailOrUsername }, { email: emailOrUsername }],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    const token = generateToken({ email: user.email, username: user.username });
+    res.json({ message: "Login successful.", token });
+  } catch (error) {
+    res.status(500).json({ message: "Error logging in. Please try again." });
+  }
+});
+
 // Create User Route (Writes to UserDB)
 app.post("/signup", async (req, res) => {
   try {
