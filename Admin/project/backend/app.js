@@ -208,7 +208,6 @@ app.post("/createUser", async (req, res) => {
   }
 });
 
-
 // Add User to the Watchlist
 app.post("/watchlist/add", authenticateJWT, async (req, res) => {
   const { videoUrl } = req.body;
@@ -357,7 +356,6 @@ app.put("/user/update", authenticateJWT, async (req, res) => {
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
-
 
 // ---------------- Start Server ---------------- //
 app.listen(PORT, "0.0.0.0", () => {
