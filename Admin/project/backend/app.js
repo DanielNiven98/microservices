@@ -412,10 +412,11 @@ app.put("/user/update", authenticateJWT, async (req, res) => {
   }
 });
 
+// Edit Admin User (AdminDB)
 app.put("/editAdmin/:username", authenticateJWT, async (req, res) => {
   try {
     const { username } = req.params; // Current username
-    const { newUsername, email } = req.body; // New values
+    const { newUsername, email } = req.body; // New data to update
 
     // Find the user in AdminDB and update
     const updatedAdmin = await User.findOneAndUpdate(
@@ -434,26 +435,6 @@ app.put("/editAdmin/:username", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "An error occurred while updating the admin user." });
   }
 });
-
-app.delete("/deleteAdmin/:username", authenticateJWT, async (req, res) => {
-  try {
-    const { username } = req.params;
-
-    // Find and delete the admin user by username
-    const user = await User.findOneAndDelete({ username, role: "admin" });
-
-    if (!user) {
-      return res.status(404).json({ message: "Admin user not found." });
-    }
-
-    res.status(200).json({ message: `Admin user '${username}' deleted successfully.` });
-  } catch (error) {
-    console.error("Error deleting admin user:", error);
-    res.status(500).json({ message: "An error occurred while deleting the admin user." });
-  }
-});
-
-
 
 
 app.get('/health', (req, res) => {
