@@ -47,6 +47,7 @@ app.use(
     origin: [
       "http://localhost:8080",
       "https://bc6d355d6e1d.vfs.cloud9.us-east-1.amazonaws.com", // Cloud9 URL
+      "http://34.233.52.146:8080",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
