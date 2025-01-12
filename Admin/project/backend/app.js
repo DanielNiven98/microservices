@@ -144,22 +144,27 @@ app.post(
   }
 );
 
-// Fetch movies
 app.get("/movies", authenticateJWT, async (req, res) => {
   try {
     const [files] = await bucket.getFiles({ prefix: "videos/" });
+
     const videos = files
-      .filter((file) => file.name.endsWith(".mp4"))
+      .filter((file) => file.metadata.contentType === 'video/mp4') // Check MIME type
       .map((file) => ({
         title: file.name.replace("videos/", ""),
         url: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${file.name}`,
       }));
+
+    if (videos.length === 0) {
+      return res.status(404).json({ message: 'No videos found.' });
+    }
+
     res.status(200).json(videos);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching videos from the bucket." });
+    console.error("Error fetching videos from GCS:", error);
+    res.status(500).json({ message: "Error fetching videos from GCS." });
   }
 });
-
 // Fetch Users from AdminDB
 app.get("/admin/users", authenticateJWT, async (req, res) => {
   try {

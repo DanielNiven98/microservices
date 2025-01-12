@@ -111,6 +111,30 @@
     <h1>Welcome, <span id="usernameDisplay">User</span>!</h1>
     <p class="lead">Browse our movie catalog below:</p>
   </div>
+  
+  <!-- Upload Movie Button -->
+<button class="btn btn-primary mb-3" onclick="openUploadModal()">Upload Movie</button>
+
+<!-- Upload Movie Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadModalLabel">Upload Movie</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="uploadMovieForm">
+          <div class="mb-3">
+            <label for="movieFile" class="form-label">Choose Video File</label>
+            <input type="file" class="form-control" id="movieFile" accept="video/*" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
   <div class="container catalog" id="catalogContainer">
     <h2>Movie Catalog</h2>
@@ -309,12 +333,59 @@
         console.error("Error removing from watchlist:", error);
       }
     };
+    
+    // Open the upload movie modal
+  function openUploadModal() {
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    uploadModal.show();
+  }
+
+  // Handle upload movie form submission
+  document.getElementById('uploadMovieForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fileInput = document.getElementById('movieFile');
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert('Please select a video file to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('video', file);
+
+    try {
+      const response = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/movies/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`, // Include JWT token for authentication
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('Movie uploaded successfully! URL: ' + result.url);
+        const uploadModal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+        uploadModal.hide(); // Close the modal
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to upload movie: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error uploading movie:', error);
+      alert('An error occurred while uploading the movie.');
+    }
+  });
 
     // Logout functionality
     document.getElementById('logout').addEventListener('click', () => {
       localStorage.removeItem('jwt');
       window.location.href = '/login.html';
     });
+    
+    
 
     // Initialize the page
     fetchUserInfo();
