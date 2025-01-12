@@ -208,6 +208,33 @@ app.post("/createUser", async (req, res) => {
   }
 });
 
+// Delete Regular User (Deletes from UserDB)
+app.delete("/deleteUser/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({ message: "Username is required." });
+    }
+
+    // Ensure we are connected to the UserDB
+    const userDbConnection = mongoose.createConnection("mongodb://user-mongo:27017/UserDB", { useNewUrlParser: true, useUnifiedTopology: true });
+    const UserModel = userDbConnection.model("User", userSchema);
+
+    // Find and delete the user by username
+    const deletedUser = await UserModel.findOneAndDelete({ username });
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found in UserDB." });
+    }
+
+    res.status(200).json({ message: `User '${username}' deleted successfully from UserDB.` });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "An error occurred while deleting the user from UserDB." });
+  }
+});
+
+
 
 // Add User to the Watchlist
 app.post("/watchlist/add", authenticateJWT, async (req, res) => {
