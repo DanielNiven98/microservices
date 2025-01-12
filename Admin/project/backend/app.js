@@ -310,6 +310,31 @@ app.get("/watchlist", authenticateJWT, async (req, res) => {
   }
 });
 
+// User Login
+app.post("/login", async (req, res) => {
+  try {
+    const { emailOrUsername, password } = req.body;
+    const user = await User.findOne({
+      $or: [{ username: emailOrUsername }, { email: emailOrUsername }],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Incorrect password." });
+    }
+
+    const token = generateToken({ email: user.email, username: user.username });
+    res.json({ message: "Login successful.", token });
+  } catch (error) {
+    res.status(500).json({ message: "Error logging in. Please try again." });
+  }
+});
+
+
 // ---------------- Start Server ---------------- //
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Admin microservice running on http://localhost:${PORT}`);
