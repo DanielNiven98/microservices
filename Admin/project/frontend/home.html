@@ -333,6 +333,29 @@
       localStorage.removeItem('jwt');
       window.location.href = '/login.html';
     });
+    
+    
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append("video", document.getElementById("videoFile").files[0]);
+      formData.append("title", document.getElementById("videoTitle").value);
+
+      try {
+        const response = await fetch('/movies/upload', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        });
+        const result = await response.json();
+        alert(result.message);
+        fetchMovies();
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
+    });
 
     
 
