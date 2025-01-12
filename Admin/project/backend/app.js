@@ -412,11 +412,10 @@ app.put("/user/update", authenticateJWT, async (req, res) => {
   }
 });
 
-// Edit Admin User (AdminDB)
 app.put("/editAdmin/:username", authenticateJWT, async (req, res) => {
   try {
     const { username } = req.params; // Current username
-    const { newUsername, email } = req.body; // New data to update
+    const { newUsername, email } = req.body; // New values
 
     // Find the user in AdminDB and update
     const updatedAdmin = await User.findOneAndUpdate(
@@ -435,6 +434,7 @@ app.put("/editAdmin/:username", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "An error occurred while updating the admin user." });
   }
 });
+
 
 
 app.get('/health', (req, res) => {
