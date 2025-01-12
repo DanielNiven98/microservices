@@ -61,6 +61,7 @@ const generateToken = (payload) =>
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.warn("Token missing or invalid format in the request header.");
     return res
       .status(401)
       .json({ message: "Unauthorized: Token missing or invalid format." });
@@ -70,13 +71,16 @@ const authenticateJWT = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }, (err, decoded) => {
     if (err) {
+      console.error("Token verification failed:", err);
       return res.status(403).json({ message: "Invalid or expired token." });
     }
 
-    req.user = decoded; // Attach the decoded user to the request object
+    console.log("Token successfully verified for:", decoded.username || decoded.email);
+    req.user = decoded; // Attach decoded user information to the request
     next();
   });
 };
+
 
 // ---------------- Routes ---------------- //
 
@@ -351,29 +355,35 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// User Login
 app.post("/login", async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body;
+    console.log(`Login attempt for: ${emailOrUsername}`); // Log the login attempt
+
     const user = await User.findOne({
       $or: [{ username: emailOrUsername }, { email: emailOrUsername }],
     });
 
     if (!user) {
+      console.log(`Login failed - User not found: ${emailOrUsername}`);
       return res.status(404).json({ message: "User not found." });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
+      console.log(`Login failed - Incorrect password for user: ${emailOrUsername}`);
       return res.status(401).json({ message: "Incorrect password." });
     }
 
     const token = generateToken({ email: user.email, username: user.username });
+    console.log(`Token generated for user: ${emailOrUsername}`); // Log token generation
     res.json({ message: "Login successful.", token });
   } catch (error) {
+    console.error("Error during login:", error);
     res.status(500).json({ message: "Error logging in. Please try again." });
   }
 });
+
 
 // Fetch Logged-In User Info
 app.get("/user", authenticateJWT, (req, res) => {
