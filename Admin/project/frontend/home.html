@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MyApp - Movie Catalog</title>
+  <title>Admin - Upload Videos</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
@@ -16,18 +16,8 @@
       margin: 0;
     }
 
-    .welcome-container {
-      margin-top: 50px;
-    }
-
-    .nav-link {
-      cursor: pointer;
-    }
-
-    .footer {
-      background-color: #343a40;
-      color: #fff;
-      padding: 10px 0;
+    .navbar {
+      margin-bottom: 20px;
     }
 
     .catalog {
@@ -37,27 +27,19 @@
 
     .movie-card {
       cursor: pointer;
-      transition: transform 0.2s ease-in-out;
+      transition: transform 0.2s ease-in-out; 
     }
 
     .movie-card:hover {
       transform: scale(1.05);
     }
 
-    #videoPlayerContainer {
-      margin-top: 30px;
-      display: none;
-    }
-
-    #videoPlayer {
-      width: 100%;
-      height: auto;
-      border: 1px solid #ccc;
-    }
-
-    #progressContainer {
-      margin-top: 20px;
-      display: none;
+    footer {
+      background-color: #343a40;
+      color: #fff;
+      padding: 10px 0;
+      text-align: center;
+      margin-top: auto;
     }
 
     @media (max-width: 768px) {
@@ -65,9 +47,8 @@
         font-size: 16px;
       }
 
-      .footer {
+      footer {
         font-size: 14px;
-        padding: 5px 0;
       }
     }
   </style>
@@ -76,7 +57,7 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="home.html">DREAD Admin</a>
+      <a class="navbar-brand" href="#">Admin Panel</a>
       <button
         class="navbar-toggler"
         type="button"
@@ -91,15 +72,6 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link active" href="home.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="admin.html">User management</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="watchlist.html">Watchlist test</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link text-danger" id="logout" href="#">Logout</a>
           </li>
         </ul>
@@ -107,15 +79,8 @@
     </div>
   </nav>
 
-  <div class="container welcome-container text-center">
-    <h1>Welcome, <span id="usernameDisplay">User</span>!</h1>
-    <p class="lead">Browse our movie catalog below:</p>
-  </div>
-  
-  <!-- Upload Movie Button -->
-<button class="btn btn-primary mb-3" onclick="openUploadModal()">Upload Movie</button>
-
-<div class="container mt-5">
+  <!-- Upload Section -->
+  <div class="container mt-5">
     <h2>Upload a New Video</h2>
     <form id="uploadForm">
       <div class="mb-3">
@@ -128,68 +93,21 @@
       </div>
       <button type="submit" class="btn btn-primary">Upload Video</button>
     </form>
+  </div>
 
-
+  <!-- Catalog Section -->
   <div class="container catalog" id="catalogContainer">
-    <h2>Movie Catalog</h2>
+    <h2>Uploaded Videos</h2>
     <div class="row" id="movie-catalog"></div>
   </div>
 
-  <!-- Watchlist Section -->
-  <div class="container catalog mt-5" id="watchlistContainer">
-    <h2>Your Watchlist</h2>
-    <div class="row" id="watchlist-catalog"></div>
-  </div>
-
-  <!-- Video Player Section -->
-  <div class="container" id="videoPlayerContainer">
-    <h2 id="videoTitle" class="text-center">Now Playing:</h2>
-    <video id="videoPlayer" controls>
-      <source id="videoSource" type="video/mp4" />
-      Your browser does not support video playback.
-    </video>
-    <div class="text-center mt-3">
-      <button class="btn btn-primary" id="backToCatalog">Back to Catalog</button>
-    </div>
-  </div>
-
-  <footer class="footer text-center py-3">
-    <div class="container">
-      <p class="mb-0">MyApp &copy; 2024. All rights reserved.</p>
-    </div>
+  <footer>
+    <div>MyApp &copy; 2024. All rights reserved.</div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Fetch User Info
-    const fetchUserInfo = async () => {
-      try {
-        const token = localStorage.getItem("jwt");
-        if (!token) {
-          window.location.href = '/login.html'; // Redirect to login if no token
-          return;
-        }
-
-        const response = await fetch('/user', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const user = await response.json();
-          document.getElementById('usernameDisplay').textContent = user.username;
-        } else {
-          const message = await response.json();
-          alert(message.message);
-          window.location.href = '/login.html';
-        }
-      } catch (error) {
-        console.error("Error fetching user info:", error);
-      }
-    };
-
-    // Fetch Movies
+    // Fetch Videos
     const fetchMovies = async () => {
       try {
         const token = localStorage.getItem("jwt");
@@ -226,7 +144,6 @@
                   <source src="${movie.url}" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
-                <button class="btn btn-primary mt-2" onclick="addToWatchlist('${movie.url}')">Add to Watchlist</button>
               </div>
             </div>
           </div>
@@ -235,106 +152,7 @@
       });
     };
 
-    // Add Video to Watchlist
-    const addToWatchlist = async (url) => {
-      try {
-        const response = await fetch('/watchlist/add', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ videoUrl: url }),
-        });
-
-        if (response.ok) {
-          alert("Video added to watchlist!");
-          fetchWatchlist(); // Refresh watchlist
-        } else {
-          const error = await response.json();
-          alert(`Error: ${error.message}`);
-        }
-      } catch (error) {
-        console.error("Error adding to watchlist:", error);
-      }
-    };
-
-    // Fetch Watchlist
-    const fetchWatchlist = async () => {
-      try {
-        const response = await fetch('/watchlist', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-          },
-        });
-
-        if (response.ok) {
-          const { watchlist } = await response.json();
-          populateWatchlist(watchlist);
-        } else {
-          const error = await response.json();
-          alert(`Error fetching watchlist: ${error.message}`);
-        }
-      } catch (error) {
-        console.error("Error fetching watchlist:", error);
-      }
-    };
-
-    // Populate Watchlist
-    const populateWatchlist = (watchlist) => {
-      const watchlistContainer = document.getElementById('watchlist-catalog');
-      watchlistContainer.innerHTML = '';
-
-      watchlist.forEach((url) => {
-        const watchlistCard = `
-          <div class="col-12 col-sm-6 col-md-4 mb-4">
-            <div class="card movie-card">
-              <div class="card-body">
-                <h5>Watch Later</h5>
-                <video width="100%" controls>
-                  <source src="${url}" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-                <button class="btn btn-danger mt-2" onclick="removeFromWatchlist('${url}')">Remove from Watchlist</button>
-              </div>
-            </div>
-          </div>
-        `;
-        watchlistContainer.insertAdjacentHTML('beforeend', watchlistCard);
-      });
-    };
-
-    // Remove Video from Watchlist
-    const removeFromWatchlist = async (url) => {
-      try {
-        const response = await fetch('/watchlist/remove', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ videoUrl: url }),
-        });
-
-        if (response.ok) {
-          alert("Video removed from watchlist.");
-          fetchWatchlist();
-        } else {
-          const error = await response.json();
-          alert(`Error: ${error.message}`);
-        }
-      } catch (error) {
-        console.error("Error removing from watchlist:", error);
-      }
-    };
-
-    // Logout functionality
-    document.getElementById('logout').addEventListener('click', () => {
-      localStorage.removeItem('jwt');
-      window.location.href = '/login.html';
-    });
-    
-    
+    // Handle Upload
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData();
@@ -349,20 +167,23 @@
             Authorization: `Bearer ${localStorage.getItem("jwt")}`,
           },
         });
+
         const result = await response.json();
         alert(result.message);
-        fetchMovies();
+        fetchMovies(); // Refresh catalog
       } catch (error) {
         console.error("Upload failed:", error);
       }
     });
 
-    
+    // Logout functionality
+    document.getElementById('logout').addEventListener('click', () => {
+      localStorage.removeItem('jwt');
+      window.location.href = '/login.html';
+    });
 
-    // Initialize the page
-    fetchUserInfo();
+    // Initialize
     fetchMovies();
-    fetchWatchlist();
   </script>
 </body>
 </html>
