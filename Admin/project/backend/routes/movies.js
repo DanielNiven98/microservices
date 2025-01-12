@@ -20,7 +20,6 @@ const upload = multer({
   },
 });
 
-// Upload a video to GCS
 router.post('/upload', upload.single('video'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file provided.' });
@@ -32,8 +31,10 @@ router.post('/upload', upload.single('video'), async (req, res) => {
 
   try {
     const stream = gcsFile.createWriteStream({
-      metadata: { contentType: file.mimetype },
-      resumable: false,  // Set to false for simplicity in this example
+      metadata: { 
+        contentType: 'video/mp4' // Force the MIME type to video/mp4
+      },
+      resumable: false, // For simplicity
     });
 
     stream.on('error', (err) => {
@@ -44,7 +45,7 @@ router.post('/upload', upload.single('video'), async (req, res) => {
     stream.on('finish', async () => {
       // Make the file public after upload
       await gcsFile.makePublic();
-      const publicUrl = `https://storage.googleapis.com/nivenmoviebucket/videos/${sanitizedFileName}`;
+      const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET_NAME}/videos/${sanitizedFileName}`;
 
       res.status(201).json({
         message: 'Video uploaded successfully.',
@@ -52,13 +53,13 @@ router.post('/upload', upload.single('video'), async (req, res) => {
       });
     });
 
-    // End the stream to upload the file
     stream.end(file.buffer);
   } catch (error) {
     console.error('Error uploading video:', error);
     res.status(500).json({ message: 'Error uploading video.' });
   }
 });
+
 
 // Fetch the list of videos from GCS
 router.get('/', async (req, res) => {

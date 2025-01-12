@@ -144,27 +144,27 @@ app.post(
   }
 );
 
-app.get("/movies", authenticateJWT, async (req, res) => {
-  try {
-    const [files] = await bucket.getFiles({ prefix: "videos/" });
-
-    const videos = files
-      .filter((file) => file.metadata.contentType === 'video/mp4') // Check MIME type
-      .map((file) => ({
-        title: file.name.replace("videos/", ""),
-        url: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${file.name}`,
-      }));
-
-    if (videos.length === 0) {
-      return res.status(404).json({ message: 'No videos found.' });
+// Upload a New Movie
+app.post('/movies/upload', authenticateJWT, (req, res) => {
+  upload.single('video')(req, res, (err) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File is too large. Maximum allowed size is 1GB.' });
+    } else if (err) {
+      console.error('Error uploading video:', err);
+      return res.status(500).json({ message: 'An error occurred while uploading the video.' });
     }
 
-    res.status(200).json(videos);
-  } catch (error) {
-    console.error("Error fetching videos from GCS:", error);
-    res.status(500).json({ message: "Error fetching videos from GCS." });
-  }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file provided.' });
+    }
+
+    res.status(201).json({
+      message: 'Video uploaded successfully.',
+      url: `/videos/${req.file.filename}`,
+    });
+  });
 });
+
 // Fetch Users from AdminDB
 app.get("/admin/users", authenticateJWT, async (req, res) => {
   try {
