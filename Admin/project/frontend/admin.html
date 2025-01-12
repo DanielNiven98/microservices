@@ -272,40 +272,49 @@
       editModal.show();
     }
 
-    // Handle form submission for editing
-    document.getElementById("editUserForm").addEventListener("submit", async (e) => {
-      e.preventDefault(); // Prevent the form from refreshing the page
+    function openEditAdminModal(username, email) {
+  currentUser = username;
+  document.getElementById("editUsername").value = username;
+  document.getElementById("editEmail").value = email;
 
-      const newUsername = document.getElementById("editUsername").value;
-      const email = document.getElementById("editEmail").value;
+  const editModal = new bootstrap.Modal(document.getElementById("editModal"));
+  editModal.show();
+}
 
-      try {
-        const response = await fetch(
-          `http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/editUser/${currentUser}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ newUsername, email }), // Send updated data
-          }
-        );
+document.getElementById("editUserForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-        if (response.ok) {
-          alert("User updated successfully.");
-          fetchUsers(); // Refresh the user list
-          const editModal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
-          editModal.hide(); // Close the modal
-        } else {
-          const errorData = await response.json();
-          alert(`Failed to update user: ${errorData.message}`);
-        }
-      } catch (error) {
-        console.error("Error updating user:", error);
-        alert("An error occurred while updating the user.");
+  const newUsername = document.getElementById("editUsername").value;
+  const email = document.getElementById("editEmail").value;
+
+  try {
+    const response = await fetch(
+      `http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/editAdmin/${currentUser}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newUsername, email }),
       }
-    });
+    );
+
+    if (response.ok) {
+      alert("Admin user updated successfully.");
+      fetchUsers(); // Refresh user list
+      const editModal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
+      editModal.hide();
+    } else {
+      const errorData = await response.json();
+      alert(`Failed to update admin user: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error("Error updating admin user:", error);
+    alert("An error occurred while updating the admin user.");
+  }
+});
+
 
     // Delete user
     async function deleteUser(username) {
