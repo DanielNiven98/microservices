@@ -149,168 +149,168 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-  const token = localStorage.getItem('jwt'); // Get JWT token
-  let currentUser = null; // Track the current user being edited
+    const token = localStorage.getItem('jwt'); // Get JWT token
+    let currentUser = null; // Track the current user being edited
 
-  // Fetch users from both AdminDB and UserDB
-  async function fetchUsers() {
-    try {
-      // Fetch Admin Users
-      const adminResponse = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/admin/users', { 
-        method: 'GET', 
-        headers: { Authorization: `Bearer ${token}` } 
-      });
+    // Fetch users from both AdminDB and UserDB
+    async function fetchUsers() {
+      try {
+        // Fetch Admin Users
+        const adminResponse = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/admin/users', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      if (adminResponse.ok) {
-        const adminData = await adminResponse.json();
-        const adminUsers = adminData.users || [];
-        populateTable(adminUsers, "AdminDB");  // Populate the admin users table
-      } else {
-        console.error('Failed to fetch admin users');
+        if (adminResponse.ok) {
+          const adminData = await adminResponse.json();
+          const adminUsers = adminData.users || [];
+          populateTable(adminUsers, "AdminDB");  // Populate the admin users table
+        } else {
+          console.error('Failed to fetch admin users');
+        }
+
+        // Fetch Regular Users
+        const userResponse = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/users', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          const userUsers = userData.users || [];
+          populateTable(userUsers, "UserDB");  // Populate the user users table
+        } else {
+          console.error('Failed to fetch user users');
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
       }
-
-      // Fetch Regular Users
-      const userResponse = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/users', { 
-        method: 'GET', 
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        const userUsers = userData.users || [];
-        populateTable(userUsers, "UserDB");  // Populate the regular users table
-      } else {
-        console.error('Failed to fetch regular users');
-      }
-    } catch (error) {
-      console.error('Error:', error);
     }
-  }
 
-  // Populate the table with users
-  function populateTable(users, source) {
-    const tableBody = source === "AdminDB" ? document.getElementById('admin-users-table-body') : document.getElementById('user-users-table-body');
-    tableBody.innerHTML = ''; // Clear existing rows
+    // Populate the table with users
+    function populateTable(users, source) {
+      const tableBody = source === "AdminDB" ? document.getElementById('admin-users-table-body') : document.getElementById('user-users-table-body');
+      tableBody.innerHTML = ''; // Clear existing rows
 
-    users.forEach(user => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${user.username}</td>
-        <td>${user.email}</td>
-        <td>${source}</td>
-        <td>
-          <button class="btn btn-primary btn-sm" onclick="openEditModal('${user.username}', '${user.email}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">Delete</button>
-        </td>
-      `;
-      tableBody.appendChild(row);
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.email}</td>
+          <td>${source}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="openEditModal('${user.username}', '${user.email}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Open the create user modal
+    function openCreateModal() {
+      const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+      createModal.show();
+    }
+
+    // Handle create user form submission
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('createUsername').value;
+      const email = document.getElementById('createEmail').value;
+      const password = document.getElementById('createPassword').value;
+
+      try {
+        const response = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/createUser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        if (response.ok) {
+          alert('User created successfully');
+          fetchUsers(); // Refresh the user list
+          const createModal = bootstrap.Modal.getInstance(document.getElementById('createModal'));
+          createModal.hide();
+        } else {
+          alert('Failed to create user');
+        }
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('An error occurred while creating the user. Please try again.');
+      }
     });
-  }
 
-  // Open the create user modal
-  function openCreateModal() {
-    const createModal = new bootstrap.Modal(document.getElementById('createModal'));
-    createModal.show();
-  }
+    // Open the edit modal
+    function openEditModal(username, email) {
+      currentUser = username;
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editEmail').value = email;
 
-  // Handle create user form submission
-  document.getElementById('createUserForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById('createUsername').value;
-    const email = document.getElementById('createEmail').value;
-    const password = document.getElementById('createPassword').value;
-
-    try {
-      const response = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/createUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ username, email, password })
-      });
-
-      if (response.ok) {
-        alert('User created successfully');
-        fetchUsers(); // Refresh the user list
-        const createModal = bootstrap.Modal.getInstance(document.getElementById('createModal'));
-        createModal.hide();
-      } else {
-        alert('Failed to create user');
-      }
-    } catch (error) {
-      console.error('Error creating user:', error);
-      alert('An error occurred while creating the user. Please try again.');
+      const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+      editModal.show();
     }
-  });
 
-  // Open the edit modal
-  function openEditModal(username, email) {
-    currentUser = username;
-    document.getElementById('editUsername').value = username;
-    document.getElementById('editEmail').value = email;
+    // Handle form submission for editing
+    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
-    editModal.show();
-  }
+      const newUsername = document.getElementById('editUsername').value;
+      const email = document.getElementById('editEmail').value;
 
-  // Handle form submission for editing
-  document.getElementById('editUserForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+      try {
+        const response = await fetch(`/users/${currentUser}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ newUsername, email })
+        });
 
-    const newUsername = document.getElementById('editUsername').value;
-    const email = document.getElementById('editEmail').value;
-
-    try {
-      const response = await fetch(`http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/users/${currentUser}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ newUsername, email })
-      });
-
-      if (response.ok) {
-        alert('User updated successfully');
-        fetchUsers(); // Refresh the user list
-        const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-        editModal.hide();
-      } else {
-        alert('Failed to update user');
+        if (response.ok) {
+          alert('User updated successfully');
+          fetchUsers(); // Refresh the user list
+          const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+          editModal.hide();
+        } else {
+          alert('Failed to update user');
+        }
+      } catch (error) {
+        console.error('Error updating user:', error);
+        alert('An error occurred while updating the user. Please try again.');
       }
-    } catch (error) {
-      console.error('Error updating user:', error);
-      alert('An error occurred while updating the user. Please try again.');
-    }
-  });
+    });
 
-  // Delete a user
-  async function deleteUser(username) {
-    if (!confirm(`Are you sure you want to delete user: ${username}?`)) return;
+    // Delete a user
+    async function deleteUser(username) {
+      if (!confirm(`Are you sure you want to delete user: ${username}?`)) return;
 
-    try {
-      const response = await fetch(`http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/users/${username}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      try {
+        const response = await fetch(`/users/${username}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      if (response.ok) {
-        alert(`User ${username} deleted successfully`);
-        fetchUsers(); // Refresh the user list
-      } else {
-        alert(`Failed to delete user ${username}`);
+        if (response.ok) {
+          alert(`User ${username} deleted successfully`);
+          fetchUsers(); // Refresh the user list
+        } else {
+          alert(`Failed to delete user ${username}`);
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('An error occurred while deleting the user. Please try again.');
       }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      alert('An error occurred while deleting the user. Please try again.');
     }
-  }
 
-  // Fetch users on page load
-  window.onload = fetchUsers;
-</script>
-
+    // Fetch users on page load
+    window.onload = fetchUsers;
+  </script>
 </body>
 </html>

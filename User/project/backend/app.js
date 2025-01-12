@@ -324,6 +324,24 @@ app.put("/user/update", authenticateJWT, async (req, res) => {
   }
 });
 
+// Delete User
+app.delete("/users/:username", authenticateJWT, async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const user = await User.findOneAndDelete({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: "User deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "An error occurred while deleting the user." });
+  }
+});
+
+
 // ---------------- Start Server ---------------- //
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${PORT}`);
