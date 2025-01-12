@@ -291,7 +291,7 @@
     async function deleteUser(username) {
       if (confirm(`Are you sure you want to delete user '${username}'?`)) {
         try {
-          const response = await fetch(`http://localhost:8080/deleteUser/${username}`, {
+          const response = await fetch(`http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/deleteUser/${username}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           });
