@@ -10,6 +10,10 @@
     body {
       font-family: Arial, sans-serif;
       background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
     }
 
     .welcome-container {
@@ -20,16 +24,9 @@
       cursor: pointer;
     }
 
-    .footer {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background-color: #343a40;
-      color: #fff;
-    }
-
     .catalog {
       margin-top: 20px;
+      flex: 1;
     }
 
     .movie-card {
@@ -52,9 +49,17 @@
       border: 1px solid #ccc;
     }
 
-    #progressContainer {
-      margin-top: 20px;
-      display: none;
+    footer {
+      background-color: #343a40;
+      color: #fff;
+      text-align: center;
+      padding: 10px 0;
+      margin-top: auto;
+      width: 100%;
+    }
+
+    .content {
+      flex: 1; /* Ensures that content takes up remaining space above the footer */
     }
   </style>
 </head>
@@ -93,35 +98,39 @@
     </div>
   </nav>
 
-  <div class="container welcome-container text-center">
-    <h1>Welcome, <span id="usernameDisplay">User</span>!</h1>
-    <p class="lead">Browse our movie catalog below:</p>
-  </div>
+  <!-- Content Section -->
+  <div class="content">
+    <div class="container welcome-container text-center">
+      <h1>Welcome, <span id="usernameDisplay">User</span>!</h1>
+      <p class="lead">Browse our movie catalog below:</p>
+    </div>
 
-  <div class="container catalog" id="catalogContainer">
-    <h2>Movie Catalog</h2>
-    <div class="row" id="movie-catalog"></div>
-  </div>
+    <div class="container catalog" id="catalogContainer">
+      <h2>Movie Catalog</h2>
+      <div class="row" id="movie-catalog"></div>
+    </div>
 
-  <!-- Watchlist Section -->
-  <div class="container catalog mt-5" id="watchlistContainer">
-    <h2>Your Watchlist</h2>
-    <div class="row" id="watchlist-catalog"></div>
-  </div>
+    <!-- Watchlist Section -->
+    <div class="container catalog mt-5" id="watchlistContainer">
+      <h2>Your Watchlist</h2>
+      <div class="row" id="watchlist-catalog"></div>
+    </div>
 
-  <!-- Video Player Section -->
-  <div class="container" id="videoPlayerContainer">
-    <h2 id="videoTitle" class="text-center">Now Playing:</h2>
-    <video id="videoPlayer" controls>
-      <source id="videoSource" type="video/mp4" />
-      Your browser does not support video playback.
-    </video>
-    <div class="text-center mt-3">
-      <button class="btn btn-primary" id="backToCatalog">Back to Catalog</button>
+    <!-- Video Player Section -->
+    <div class="container" id="videoPlayerContainer">
+      <h2 id="videoTitle" class="text-center">Now Playing:</h2>
+      <video id="videoPlayer" controls>
+        <source id="videoSource" type="video/mp4" />
+        Your browser does not support video playback.
+      </video>
+      <div class="text-center mt-3">
+        <button class="btn btn-primary" id="backToCatalog">Back to Catalog</button>
+      </div>
     </div>
   </div>
 
-  <footer class="footer text-center py-3">
+  <!-- Footer -->
+  <footer>
     <div class="container">
       <p class="mb-0">MyApp &copy; 2024. All rights reserved.</p>
     </div>
