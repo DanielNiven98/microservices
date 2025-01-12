@@ -188,25 +188,33 @@
       }
     }
 
-    // Populate the table with users
-    function populateTable(users, source) {
-      const tableBody = source === "AdminDB" ? document.getElementById('admin-users-table-body') : document.getElementById('user-users-table-body');
-      tableBody.innerHTML = ''; // Clear existing rows
+   function populateTable(users, source) {
+  const tableBody =
+    source === "AdminDB"
+      ? document.getElementById("admin-users-table-body")
+      : document.getElementById("user-users-table-body");
+  tableBody.innerHTML = ""; // Clear rows
 
-      users.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${user.username}</td>
-          <td>${user.email}</td>
-          <td>${source}</td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="openEditModal('${user.username}', '${user.email}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
+  users.forEach((user) => {
+    const row = `
+      <tr>
+        <td>${user.username}</td>
+        <td>${user.email}</td>
+        <td>${source}</td>
+        <td>
+          ${
+            source === "AdminDB"
+              ? `<button class="btn btn-primary btn-sm" onclick="openEditAdminModal('${user.username}', '${user.email}')">Edit</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="openEditModal('${user.username}', '${user.email}')">Edit</button>`
+          }
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.username}')">Delete</button>
+        </td>
+      </tr>
+    `;
+    tableBody.innerHTML += row;
+  });
+}
+
 
     // Open the create user modal
     function openCreateModal() {
@@ -255,6 +263,16 @@
       const editModal = new bootstrap.Modal(document.getElementById('editModal'));
       editModal.show();
     }
+    
+    function openEditAdminModal(username, email) {
+  currentUser = username;
+  document.getElementById("editUsername").value = username;
+  document.getElementById("editEmail").value = email;
+
+  const editModal = new bootstrap.Modal(document.getElementById("editModal"));
+  editModal.show();
+}
+
 
     // Handle form submission for editing
 document.getElementById("editUserForm").addEventListener("submit", async (e) => {
@@ -312,6 +330,41 @@ document.getElementById("editUserForm").addEventListener("submit", async (e) => 
         }
       }
     }
+    
+    document.getElementById("editUserForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); // Prevent form refresh
+
+  const newUsername = document.getElementById("editUsername").value;
+  const email = document.getElementById("editEmail").value;
+
+  try {
+    const response = await fetch(
+      `http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/editAdmin/${currentUser}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newUsername, email }), // Send updated data
+      }
+    );
+
+    if (response.ok) {
+      alert("Admin user updated successfully.");
+      fetchUsers(); // Refresh the user list
+      const editModal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
+      editModal.hide(); // Close modal
+    } else {
+      const errorData = await response.json();
+      alert(`Failed to update admin user: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error("Error updating admin user:", error);
+    alert("An error occurred while updating the admin user.");
+  }
+});
+
 
     // Fetch users on page load
     window.onload = fetchUsers;
