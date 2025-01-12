@@ -181,6 +181,34 @@ app.get("/users", authenticateJWT, async (req, res) => {
   }
 });
 
+// Create Regular User (Only writes to UserDB)
+app.post("/createUser", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    // Ensure we are writing to the UserDB
+    const userDbConnection = mongoose.createConnection("mongodb://user-mongo:27017/UserDB", { useNewUrlParser: true, useUnifiedTopology: true });
+    const UserModel = userDbConnection.model("User", userSchema); // Use the User schema for the UserDB
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new UserModel({ username, email, password: hashedPassword });
+    
+    await user.save();
+    res.status(201).json({ message: "User created successfully in UserDB." });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Username or email already exists." });
+    }
+    res.status(500).json({ message: "Error creating user in UserDB. Please try again." });
+  }
+});
+
+
 // Add User to the Watchlist
 app.post("/watchlist/add", authenticateJWT, async (req, res) => {
   const { videoUrl } = req.body;
@@ -325,31 +353,6 @@ app.put("/user/update", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "An error occurred while updating your profile." });
   }
 });
-
-// Delete User from User Microservice
-app.delete("/users/:username", authenticateJWT, async (req, res) => {
-  try {
-    const { username } = req.params;
-
-    // API request to the User microservice
-    const userMicroserviceUrl = `http://localhost:8082/users/${username}`;
-    const response = await axios.delete(userMicroserviceUrl, {
-      headers: {
-        Authorization: req.headers.authorization, // Pass the JWT token
-      },
-    });
-
-    if (response.status === 200) {
-      res.status(200).json({ message: "User deleted successfully." });
-    } else {
-      res.status(response.status).json(response.data);
-    }
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ message: "An error occurred while deleting the user." });
-  }
-});
-
 
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
