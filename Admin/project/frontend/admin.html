@@ -156,7 +156,7 @@
     async function fetchUsers() {
       try {
         // Fetch Admin Users
-        const adminResponse = await fetch('http://34.233.52.146:8080:8080/admin/users', {
+        const adminResponse = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/admin/users', {
           method: 'GET',
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -170,7 +170,7 @@
         }
 
         // Fetch Regular Users
-        const userResponse = await fetch('http://34.233.52.146:8080:8080/users', {
+        const userResponse = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/users', {
           method: 'GET',
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -223,7 +223,7 @@
       const password = document.getElementById('createPassword').value;
 
       try {
-        const response = await fetch('http://34.233.52.146:8080:8080/createUser', {
+        const response = await fetch('http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/createUser', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ document.getElementById("editUserForm").addEventListener("submit", async (e) => 
 
   try {
     const response = await fetch(
-      `http://34.233.52.146:8080:8080/editUser/${currentUser}`,
+      `http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/editUser/${currentUser}`,
       {
         method: "PUT",
         headers: {
@@ -295,7 +295,7 @@ document.getElementById("editUserForm").addEventListener("submit", async (e) => 
     async function deleteUser(username) {
       if (confirm(`Are you sure you want to delete user '${username}'?`)) {
         try {
-          const response = await fetch(`http://34.233.52.146:8080/deleteUser/${username}`, {
+          const response = await fetch(`http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/deleteUser/${username}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           });
