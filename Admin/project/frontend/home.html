@@ -57,43 +57,45 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Admin Panel</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+      <a class="navbar-brand" href="home.html">DREAD Admin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarNav" aria-controls="navbarNav"
+              aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link text-danger" id="logout" href="#">Logout</a>
-          </li>
+          <li class="nav-item"><a class="nav-link" href="home.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Profile</a></li>
+          <li class="nav-item"><a class="nav-link active" href="admin.html">Admin</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" id="logout" href="#">Logout</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
   <!-- Upload Section -->
-  <div class="container mt-5">
-    <h2>Upload a New Video</h2>
-    <form id="uploadForm">
-      <div class="mb-3">
-        <label for="videoTitle" class="form-label">Video Title (optional)</label>
-        <input type="text" class="form-control" id="videoTitle" name="title" />
+<div class="container mt-5">
+  <h2>Upload a New Video</h2>
+  <form id="uploadForm">
+    <div class="mb-3">
+      <label for="videoTitle" class="form-label">Video Title (optional)</label>
+      <input type="text" class="form-control" id="videoTitle" name="title" />
+    </div>
+    <div class="mb-3">
+      <label for="videoFile" class="form-label">Select Video File</label>
+      <input type="file" class="form-control" id="videoFile" name="video" accept="video/mp4" required />
+    </div>
+    <div class="mb-3">
+      <label for="progressBar" class="form-label">Upload Progress</label>
+      <div class="progress">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
-      <div class="mb-3">
-        <label for="videoFile" class="form-label">Select Video File</label>
-        <input type="file" class="form-control" id="videoFile" name="video" accept="video/mp4" required />
-      </div>
-      <button type="submit" class="btn btn-primary">Upload Video</button>
-    </form>
-  </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Upload Video</button>
+  </form>
+</div>
+
 
   <!-- Catalog Section -->
   <div class="container catalog" id="catalogContainer">
@@ -102,85 +104,62 @@
   </div>
 
   <footer>
-    <div>MyApp &copy; 2024. All rights reserved.</div>
+    <div>DREAD &copy; 2024. All rights reserved.</div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Fetch Videos
-    const fetchMovies = async () => {
-      try {
-        const token = localStorage.getItem("jwt");
-        const response = await fetch('/movies', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    // Handle Upload with Progress Bar
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const progressBar = document.getElementById('progressBar');
+  const formData = new FormData();
+  formData.append("video", document.getElementById("videoFile").files[0]);
+  formData.append("title", document.getElementById("videoTitle").value);
 
-        if (response.ok) {
-          const movies = await response.json();
-          populateCatalog(movies);
-        } else {
-          const error = await response.json();
-          alert(`Error fetching movies: ${error.message}`);
-        }
-      } catch (error) {
-        console.error("Error fetching movies:", error);
-      }
-    };
+  // Create a new XMLHttpRequest
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/movies/upload', true);
 
-    // Populate Movie Catalog
-    const populateCatalog = (movies) => {
-      const catalogContainer = document.getElementById('movie-catalog');
-      catalogContainer.innerHTML = '';
+  // Set Authorization Header
+  xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem("jwt")}`);
 
-      movies.forEach((movie) => {
-        const movieCard = `
-          <div class="col-12 col-sm-6 col-md-4 mb-4">
-            <div class="card movie-card">
-              <div class="card-body">
-                <h5>${movie.title}</h5>
-                <video width="100%" controls>
-                  <source src="${movie.url}" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-          </div>
-        `;
-        catalogContainer.insertAdjacentHTML('beforeend', movieCard);
-      });
-    };
+  // Monitor the progress
+  xhr.upload.onprogress = (event) => {
+    if (event.lengthComputable) {
+      const percentComplete = Math.round((event.loaded / event.total) * 100);
+      progressBar.style.width = `${percentComplete}%`;
+      progressBar.setAttribute('aria-valuenow', percentComplete);
+      progressBar.textContent = `${percentComplete}%`;
+    }
+  };
 
-    // Handle Upload
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData();
-      formData.append("video", document.getElementById("videoFile").files[0]);
-      formData.append("title", document.getElementById("videoTitle").value);
+  // Handle successful upload
+  xhr.onload = () => {
+    if (xhr.status === 201) {
+      const response = JSON.parse(xhr.responseText);
+      alert(response.message);
+      fetchMovies(); // Refresh the catalog
+      progressBar.style.width = '0%'; // Reset progress bar
+      progressBar.textContent = '';
+    } else {
+      alert(`Error: ${xhr.responseText}`);
+      progressBar.style.width = '0%'; // Reset progress bar on failure
+      progressBar.textContent = '';
+    }
+  };
 
-      try {
-        const response = await fetch('/movies/upload', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-          },
-        });
+  // Handle errors
+  xhr.onerror = () => {
+    alert("An error occurred during the upload.");
+    progressBar.style.width = '0%'; // Reset progress bar on failure
+    progressBar.textContent = '';
+  };
 
-        const result = await response.json();
-        alert(result.message);
-        fetchMovies(); // Refresh catalog
-      } catch (error) {
-        console.error("Upload failed:", error);
-      }
-    });
+  // Send the request
+  xhr.send(formData);
+});
 
-    // Logout functionality
-    document.getElementById('logout').addEventListener('click', () => {
-      localStorage.removeItem('jwt');
-      window.location.href = '/login.html';
-    });
 
     // Initialize
     fetchMovies();
