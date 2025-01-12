@@ -10,6 +10,10 @@
     body {
       font-family: Arial, sans-serif;
       background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
     }
 
     .navbar {
@@ -20,12 +24,15 @@
       margin-top: 50px;
     }
 
+    .content {
+      flex: 1; /* Push footer to the bottom */
+    }
+
     .footer {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
       background-color: #343a40;
       color: #fff;
+      padding: 10px 0;
+      text-align: center;
     }
 
     .catalog {
@@ -55,7 +62,6 @@
       top: 10px;
       right: 10px;
     }
-
   </style>
 </head>
 <body>
@@ -87,16 +93,16 @@
     </div>
   </nav>
 
-  <div class="container welcome-container text-center">
+  <div class="container welcome-container text-center content">
     <h1>Your Watchlist</h1>
     <p class="lead">Browse your saved videos below:</p>
+
+    <div class="catalog" id="watchlist-container">
+      <p>Loading your watchlist...</p>
+    </div>
   </div>
 
-  <div class="container catalog" id="watchlist-container">
-    <p>Loading your watchlist...</p>
-  </div>
-
-  <footer class="footer text-center py-3">
+  <footer class="footer">
     <div class="container">
       <p class="mb-0">MyApp &copy; 2024. All rights reserved.</p>
     </div>
