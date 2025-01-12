@@ -234,6 +234,37 @@ app.delete("/deleteUser/:username", async (req, res) => {
   }
 });
 
+app.put("/editUser/:username", async (req, res) => {
+  try {
+    const { username } = req.params; // Existing username
+    const { newUsername, email } = req.body; // New values
+
+    // Connect to UserDB
+    const userDbConnection = mongoose.createConnection("mongodb://user-mongo:27017/UserDB", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    const UserModel = userDbConnection.model("User", userSchema);
+
+    // Find user by current username and update
+    const user = await UserModel.findOneAndUpdate(
+      { username },
+      { username: newUsername, email },
+      { new: true } // Return the updated user
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: "User updated successfully.", user });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "An error occurred while updating the user." });
+  }
+});
+
+
 
 
 // Add User to the Watchlist

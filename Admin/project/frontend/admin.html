@@ -257,35 +257,39 @@
     }
 
     // Handle form submission for editing
-    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+document.getElementById("editUserForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); // Prevent the form from refreshing the page
 
-      const newUsername = document.getElementById('editUsername').value;
-      const email = document.getElementById('editEmail').value;
+  const newUsername = document.getElementById("editUsername").value;
+  const email = document.getElementById("editEmail").value;
 
-      try {
-        const response = await fetch(`/users/${currentUser}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ newUsername, email })
-        });
-
-        if (response.ok) {
-          alert('User updated successfully');
-          fetchUsers(); // Refresh the user list
-          const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-          editModal.hide();
-        } else {
-          alert('Failed to update user');
-        }
-      } catch (error) {
-        console.error('Error updating user:', error);
-        alert('An error occurred while updating the user. Please try again.');
+  try {
+    const response = await fetch(
+      `http://6304263a268b426ebdafe4b4a9a5e655.vfs.cloud9.us-east-1.amazonaws.com:8080/editUser/${currentUser}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newUsername, email }), // Send updated data
       }
-    });
+    );
+
+    if (response.ok) {
+      alert("User updated successfully.");
+      fetchUsers(); // Refresh the user list
+      const editModal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
+      editModal.hide(); // Close the modal
+    } else {
+      const errorData = await response.json();
+      alert(`Failed to update user: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error("Error updating user:", error);
+    alert("An error occurred while updating the user.");
+  }
+});
 
     // Delete user
     async function deleteUser(username) {
