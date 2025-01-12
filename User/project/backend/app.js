@@ -53,7 +53,6 @@ app.use(
     origin: [
       "http://localhost:8080",  // Admin microservice
       "https://d46b640a8a824895b29954bb0243eabc.vfs.cloud9.us-east-1.amazonaws.com", // Cloud9 URL for testing
-      "http://34.233.52.146:8080",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // Allow credentials (cookies or Authorization headers)
