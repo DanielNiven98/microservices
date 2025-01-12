@@ -376,8 +376,10 @@ app.post("/login", async (req, res) => {
     }
 
     const token = generateToken({ email: user.email, username: user.username });
-    console.log(`Token generated for user: ${emailOrUsername}`); // Log token generation
-    res.json({ message: "Login successful.", token });
+    console.log(`Token generated for user: ${emailOrUsername}, Token: ${token}`); // Log token generation
+
+    // Return the token directly in the response
+    res.status(200).json({ token });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Error logging in. Please try again." });
