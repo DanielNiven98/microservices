@@ -104,20 +104,25 @@ jobs:
             docker-compose -f docker-compose.yml -p nginx up --build --force-recreate -d
             docker network inspect app-network
             docker ps
+            echo "Simulating an error here!"
+            exit 1  # Force an error to trigger the rollback
           EOF
 
       - name: Rollback to Previous Version if Deployment Fails
-        if: failure()  # Triggered only if the previous step fails
+        if: failure()
         run: |
           echo "Deployment failed, rolling back to previous version."
           ssh -o StrictHostKeyChecking=no ec2-user@34.233.52.146 << 'EOF'
             cd ~/environment/microservices
+            git fetch origin  # Fetch latest changes from remote
+            git stash || git commit -am "Saving local changes before rollback"
             git checkout HEAD~1  # Revert to previous commit (rollback)
             git push origin main  # Push the reverted commit to GitHub repository
             docker-compose -f Admin/project/admin-docker-compose.yaml -p admin up --build --force-recreate -d
             docker-compose -f User/project/user-docker-compose.yaml -p user up --build --force-recreate -d
             docker-compose -f nginx/docker-compose.yml -p nginx up --build --force-recreate -d
           EOF
+
 
       - name: Verify Deployment
         run: |
