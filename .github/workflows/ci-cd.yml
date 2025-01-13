@@ -113,6 +113,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ec2-user@34.233.52.146 << 'EOF'
             cd ~/environment/microservices
             git checkout HEAD~1  # Revert to previous commit (rollback)
+            git push origin main  # Push the reverted commit to GitHub repository
             docker-compose -f Admin/project/admin-docker-compose.yaml -p admin up --build --force-recreate -d
             docker-compose -f User/project/user-docker-compose.yaml -p user up --build --force-recreate -d
             docker-compose -f nginx/docker-compose.yml -p nginx up --build --force-recreate -d
