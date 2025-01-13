@@ -121,7 +121,7 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@3224.233.52.146 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@34.233.52.146 << 'EOF'
             docker ps
             docker network inspect app-network
           EOF
